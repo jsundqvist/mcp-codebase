@@ -203,6 +203,9 @@ app.post('/ingest-context', async (req, res) => {
         console.log(`Records to add for ${filePath}:`, records); // Log the records before adding
         await table.add(records);
         console.log(`Successfully called table.add() for ${records.length} records for ${filePath}`);
+        // Verify count immediately after adding
+        const currentTableCount = await table.countRows();
+        console.log(`Current table row count after add: ${currentTableCount}`);
 
         console.log(`Successfully ingested ${records.length} contexts for ${filePath}`);
         res.json({ message: `Context ingested for ${filePath}`, count: records.length });
@@ -235,8 +238,9 @@ app.post('/query-context', async (req, res) => {
 
         // Execute the search. LanceDB's execute() method returns a Promise that resolves to a synchronous iterable (or an array).
         // We await the promise, then use Array.from() to ensure 'results' is a standard JavaScript Array.
-        const searchResultsIterable = await table.search(queryVector).limit(10).execute();
-        let results = Array.from(searchResultsIterable);
+        const searchResultsRaw = await table.search(queryVector).limit(10).execute();
+        console.log('DEBUG: Type of searchResultsRaw (query):', typeof searchResultsRaw, Array.isArray(searchResultsRaw) ? 'is Array' : 'is NOT Array', searchResultsRaw[Symbol.iterator] ? 'is iterable' : 'is NOT iterable', searchResultsRaw[Symbol.asyncIterator] ? 'is async iterable' : 'is NOT async iterable');
+        let results = Array.from(searchResultsRaw);
         // 'results' is now a standard JavaScript Array, ready for sorting.
 
         // Optional: Prioritize results from the current file if provided
@@ -281,8 +285,9 @@ app.get('/debug/list-context', async (req, res) => {
         // Fetch all records. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
         // LanceDB's execute() method returns a Promise that resolves to a synchronous iterable (or an array).
         // We await the promise, then use Array.from() to ensure 'allRecords' is a standard JavaScript Array.
-        const allRecordsIterable = await table.query().limit(1000).execute();
-        let allRecords = Array.from(allRecordsIterable);
+        const allRecordsRaw = await table.query().limit(1000).execute();
+        console.log('DEBUG: Type of allRecordsRaw (list):', typeof allRecordsRaw, Array.isArray(allRecordsRaw) ? 'is Array' : 'is NOT Array', allRecordsRaw[Symbol.iterator] ? 'is iterable' : 'is NOT iterable', allRecordsRaw[Symbol.asyncIterator] ? 'is async iterable' : 'is NOT async iterable');
+        let allRecords = Array.from(allRecordsRaw);
         console.log(`Found ${allRecords.length} records.`);
         res.json({ count: allRecords.length, records: allRecords });
     } catch (error) {
