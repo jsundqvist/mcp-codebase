@@ -263,6 +263,26 @@ app.post('/query-context', async (req, res) => {
     }
 });
 
+/**
+ * Debug endpoint to list all ingested context records.
+ * This is for debugging purposes to inspect the database contents.
+ */
+app.get('/debug/list-context', async (req, res) => {
+    try {
+        if (!table) {
+            return res.status(500).json({ error: 'LanceDB table not initialized.' });
+        }
+        console.log('Fetching all records from LanceDB...');
+        // Fetch all records. LanceDB's toArray() method on the query builder is convenient.
+        const allRecords = await table.query().limit(1000).execute().toArray(); // Limit to 1000 for safety
+        console.log(`Found ${allRecords.length} records.`);
+        res.json({ count: allRecords.length, records: allRecords });
+    } catch (error) {
+        console.error('Error listing all context:', error);
+        res.status(500).json({ error: 'Failed to list context', details: error.message });
+    }
+});
+
 // --- Start Server ---
 initialize().then(() => {
     app.listen(PORT, () => {
