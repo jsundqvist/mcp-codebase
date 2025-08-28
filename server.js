@@ -21,7 +21,16 @@ const LanceSchemaFieldBuilder = {
     string: (name) => new ArrowField(name, new Utf8()),
     int32: (name) => new ArrowField(name, new Int32()),
     // For vector, LanceDB expects a FixedSizeList of Float32
-    vector: (name, dim) => new ArrowField(name, new FixedSizeList(new ArrowField('item', new Float32()), dim))
+    vector: (name, dim) => {
+        const itemField = new ArrowField('item', new Float32());
+        const fixedSizeListType = new FixedSizeList(itemField, dim);
+        // HACK: Explicitly ensure children is an array for FixedSizeList DataType
+        // This works around a potential bug or incompatibility where fixedSizeListType.children is undefined
+        if (!fixedSizeListType.children) {
+            fixedSizeListType.children = [itemField];
+        }
+        return new ArrowField(name, fixedSizeListType);
+    }
 };
 
 // --- Configuration ---
