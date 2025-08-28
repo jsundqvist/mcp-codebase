@@ -91,8 +91,8 @@ async function extractCodeContext(code, filePath = 'untitled.js') {
     let idCounter = 0;
 
     // Example: Find function and class declarations
-    // Corrected: Call query on the Language object obtained from the parser
-    const query = parser.getLanguage().query(`
+    // Create a Tree-sitter Query object using the JavaScript language and the query string.
+    const query = new Parser.Query(JavaScript, `
         (function_declaration name: (identifier) @name body: (statement_block) @body)
         (class_declaration name: (identifier) @name body: (class_body) @body)
         (variable_declarator name: (identifier) @name value: (_) @value)
