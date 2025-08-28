@@ -55,7 +55,7 @@ async function initialize() {
     const tableName = 'code_context';
 
     // Define the schema for the LanceDB table explicitly using Schema and Field
-    const codeContextSchema = LanceSchema({ // Use LanceSchema
+    const codeContextSchema = Schema({
         id: Field.string(),
         text: Field.string(),
         path: Field.string(),
