@@ -238,7 +238,14 @@ app.post('/query-context', async (req, res) => {
 
         // Execute the search. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
         // We await the promise to get the AsyncIterable, then use .toArray() to collect all results into a standard JavaScript Array.
-        let results = await (await table.search(queryVector).limit(10).execute()).toArray();
+        const recordBatchIterator = await table.search(queryVector).limit(10).execute();
+        console.log('DEBUG: recordBatchIterator has [Symbol.asyncIterator]?', typeof recordBatchIterator[Symbol.asyncIterator] === 'function');
+        // Explicitly get the async iterator from the RecordBatchIterator
+        const actualAsyncIterator = recordBatchIterator[Symbol.asyncIterator]();
+        let results = [];
+        for await (const record of actualAsyncIterator) {
+            results.push(record);
+        }
         // 'results' is now a standard JavaScript Array, ready for sorting.
 
         // Optional: Prioritize results from the current file if provided
@@ -280,7 +287,14 @@ app.get('/debug/list-context', async (req, res) => {
         console.log('Fetching all records from LanceDB...');
         // Fetch all records. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
         // We await the promise to get the AsyncIterable, then use .toArray() to collect all results into a standard JavaScript Array.
-        let allRecords = await (await table.query().limit(1000).execute()).toArray();
+        const recordBatchIterator = await table.query().limit(1000).execute();
+        console.log('DEBUG: recordBatchIterator has [Symbol.asyncIterator]?', typeof recordBatchIterator[Symbol.asyncIterator] === 'function');
+        // Explicitly get the async iterator from the RecordBatchIterator
+        const actualAsyncIterator = recordBatchIterator[Symbol.asyncIterator]();
+        let allRecords = [];
+        for await (const record of actualAsyncIterator) {
+            allRecords.push(record);
+        }
         // 'allRecords' is now a standard JavaScript Array.
         console.log(`Found ${allRecords.length} records.`);
         res.json({ count: allRecords.length, records: allRecords });
