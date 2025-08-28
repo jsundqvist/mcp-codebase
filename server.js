@@ -11,9 +11,9 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-// Correct way to import from a CommonJS module in an ES module context
-import pkg from '@lancedb/lancedb';
-const { connect, Field } = pkg;
+// Reverting to the original wildcard import, which should work for CommonJS modules
+// in ES module contexts, treating module.exports as the 'lancedb' object.
+import * as lancedb from '@lancedb/lancedb';
 
 // --- Configuration ---
 const app = express();
@@ -49,20 +49,20 @@ async function initialize() {
 
     // 3. Initialize LanceDB
     console.log(`Initializing LanceDB at ${DB_PATH}...`);
-    db = await connect(DB_PATH);
+    db = await lancedb.connect(DB_PATH); // Use lancedb.connect
     const tableName = 'code_context';
 
     // Define the schema for our LanceDB table
     // The 'vector' field will store our embeddings
     // Other fields store metadata about the code snippet
     const schema = {
-        id: Field.string(),
-        text: Field.string(),
-        path: Field.string(),
-        start_line: Field.int32(),
-        end_line: Field.int32(),
-        type: Field.string(), // e.g., 'function', 'class', 'comment', 'variable'
-        vector: Field.vector(384) // all-MiniLM-L6-v2 produces 384-dim vectors
+        id: lancedb.Field.string(), // Use lancedb.Field
+        text: lancedb.Field.string(), // Use lancedb.Field
+        path: lancedb.Field.string(), // Use lancedb.Field
+        start_line: lancedb.Field.int32(), // Use lancedb.Field
+        end_line: lancedb.Field.int32(), // Use lancedb.Field
+        type: lancedb.Field.string(), // e.g., 'function', 'class', 'comment', 'variable'
+        vector: lancedb.Field.vector(384) // all-MiniLM-L6-v2 produces 384-dim vectors // Use lancedb.Field
     };
 
     try {
