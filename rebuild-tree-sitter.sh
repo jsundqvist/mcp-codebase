@@ -9,6 +9,8 @@ echo "Rebuilding tree-sitter for Node.js v${NODE_VERSION} (ABI: ${NODE_ABI}, Arc
 
 # Change to the tree-sitter module directory
 (cd node_modules/tree-sitter && \
+  echo "Cleaning tree-sitter build artifacts..." && \
+  rm -rf build/Release && \
   # Use npx to run the locally installed node-gyp
   # Pass CXXFLAGS and explicit target/arch to node-gyp
   # --nodedir is crucial to point node-gyp to the correct Node.js installation for headers
