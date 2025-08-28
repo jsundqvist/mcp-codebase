@@ -50,24 +50,23 @@ async function initialize() {
     db = await lancedb.connect(DB_PATH);
     const tableName = 'code_context';
 
-    // Define a dummy record for schema inference
-    const dummyRecord = {
-        id: "dummy_id",
-        text: "dummy_text",
-        path: "dummy_path.js",
-        start_line: 0,
-        end_line: 0,
-        type: "dummy_type",
-        vector: Array(384).fill(0.0) // A vector of 384 floats
+    // Define the schema for the LanceDB table explicitly
+    const codeContextSchema = {
+        id: { type: "string", nullable: false },
+        text: { type: "string", nullable: false },
+        path: { type: "string", nullable: false },
+        start_line: { type: "int32", nullable: false },
+        end_line: { type: "int32", nullable: false },
+        type: { type: "string", nullable: false },
+        vector: { type: "vector", dim: 384, value_type: "float32", nullable: false }
     };
 
     try {
         table = await db.openTable(tableName);
         console.log(`Opened existing LanceDB table: ${tableName}`);
     } catch (e) {
-        console.log(`Table ${tableName} not found, creating new one...`);
-        // Create table by inferring schema from a dummy record
-        table = await db.createTable(tableName, [dummyRecord]);
+        console.log(`Table ${tableName} not found, creating new one with explicit schema...`);
+        table = await db.createTable(tableName, codeContextSchema);
         console.log(`Created new LanceDB table: ${tableName}`);
     }
     console.log('LanceDB initialized.');
@@ -196,10 +195,10 @@ app.post('/ingest-context', async (req, res) => {
             });
         }
 
-        // Delete existing records for this file before adding new ones
-        // This ensures the database is up-to-date for the given file
-        await table.delete(`path = '${filePath}'`);
+        // Temporarily commenting out delete to debug ingestion issue
+        // await table.delete(`path = '${filePath}'`);
         await table.add(records);
+        console.log(`Attempted to add ${records.length} records for ${filePath}`);
 
         console.log(`Successfully ingested ${records.length} contexts for ${filePath}`);
         res.json({ message: `Context ingested for ${filePath}`, count: records.length });
