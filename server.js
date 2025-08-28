@@ -232,7 +232,7 @@ app.post('/query-context', async (req, res) => {
 
         // Execute the search. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
         // We await the promise to get the AsyncIterable, then use .toArray() to collect all results into a standard JavaScript Array.
-        const recordBatchIterator = await table.search(queryVector).limit(10).execute();
+        const recordBatchIterator = await table.search(queryVector).limit(10).metric("cosine").execute();
         let results = [];
         let nextResult;
         // Manually iterate using the next() method, as for await...of is failing.
