@@ -48,7 +48,7 @@ async function initialize() {
 
     // 3. Initialize LanceDB
     console.log(`Initializing LanceDB at ${DB_PATH}...`);
-    db = await lancedb.connect(DB_PATH);
+    db = await connect(DB_PATH);
     const tableName = 'code_context';
 
     // Define the schema for the LanceDB table explicitly using Schema and Field
