@@ -14,7 +14,7 @@ import { pipeline } from '@xenova/transformers';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const lancedb = require('@lancedb/lancedb');
-const { connect, Schema, Field, DataType } = lancedb;
+const { connect, Schema } = lancedb; // Only destructure connect and Schema
 
 // --- Configuration ---
 const app = express();
@@ -55,13 +55,13 @@ async function initialize() {
 
     // Define the schema for the LanceDB table explicitly using Schema and Field
     const codeContextSchema = Schema({
-        id: Field.string(),
-        text: Field.string(),
-        path: Field.string(),
-        start_line: Field.int32(),
-        end_line: Field.int32(),
-        type: Field.string(),
-        vector: Field.vector(384, DataType.Float32),
+        id: lancedb.Field.string(),
+        text: lancedb.Field.string(),
+        path: lancedb.Field.string(),
+        start_line: lancedb.Field.int32(),
+        end_line: lancedb.Field.int32(),
+        type: lancedb.Field.string(),
+        vector: lancedb.Field.vector(384, lancedb.DataType.Float32),
     });
 
     try {
