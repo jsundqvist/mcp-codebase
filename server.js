@@ -195,8 +195,9 @@ app.post('/ingest-context', async (req, res) => {
             });
         }
 
-        // Temporarily commenting out delete to debug ingestion issue
-        // await table.delete(`path = '${filePath}'`);
+        // Delete existing records for this file before adding new ones
+        // This ensures the database is up-to-date for the given file
+        await table.delete(`path = '${filePath}'`);
         await table.add(records);
         console.log(`Attempted to add ${records.length} records for ${filePath}`);
 
@@ -229,9 +230,10 @@ app.post('/query-context', async (req, res) => {
         console.log(`Querying context for: "${query}"`);
         const queryVector = await generateEmbedding(query);
 
-        // Execute the search. LanceDB's execute() method returns a Promise that resolves to an Array of records.
-        // We simply await the promise to get the array directly.
-        let results = await table.search(queryVector).limit(10).execute();
+        // Execute the search. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
+        // We await the promise to get the AsyncIterable, then use .toArray() to collect all results.
+        const searchResultsAsyncIterable = await table.search(queryVector).limit(10).execute();
+        let results = await searchResultsAsyncIterable.toArray();
         // 'results' is now a standard JavaScript Array, ready for sorting.
 
         // Optional: Prioritize results from the current file if provided
@@ -273,9 +275,10 @@ app.get('/debug/list-context', async (req, res) => {
         console.log('Fetching all records from LanceDB...');
         // Fetch all records. LanceDB's execute() method returns a Promise that resolves to a synchronous iterable.
         // We await the promise, then use Array.from to collect all results into a standard JavaScript Array.
-        // Fetch all records. LanceDB's execute() method returns a Promise that resolves to an Array of records.
-        // We simply await the promise to get the array directly.
-        let allRecords = await table.query().limit(1000).execute();
+        // Fetch all records. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
+        // We await the promise to get the AsyncIterable, then use .toArray() to collect all results.
+        const allRecordsAsyncIterable = await table.query().limit(1000).execute();
+        let allRecords = await allRecordsAsyncIterable.toArray();
         console.log(`Found ${allRecords.length} records.`);
         res.json({ count: allRecords.length, records: allRecords });
     } catch (error) {
