@@ -240,25 +240,16 @@ app.post('/query-context', async (req, res) => {
         // We await the promise, then use Array.from() to ensure 'results' is a standard JavaScript Array.
         // Execute the search. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable (RecordBatchIterator).
         // We await the promise to get the AsyncIterable, then use 'for await...of' to collect results into an array.
-        const searchResultsRaw = await table.search(queryVector).limit(10).execute();
-        let results = [];
+        // Execute the search. The execute() method returns a RecordBatchIterator,
+        // which contains a promisedInner that resolves to the actual AsyncIterable.
+        const recordBatchIterator = await table.search(queryVector).limit(10).execute();
+        const actualAsyncIterable = await recordBatchIterator.promisedInner; // Await the inner promise
 
-        // Check if the raw result is an AsyncIterable
-        if (typeof searchResultsRaw[Symbol.asyncIterator] === 'function') {
-            console.log('DEBUG: searchResultsRaw is an AsyncIterable. Using for await...of.');
-            for await (const record of searchResultsRaw) {
-                results.push(record);
-            }
-        } else if (typeof searchResultsRaw[Symbol.iterator] === 'function') {
-            // If not AsyncIterable, check if it's a synchronous Iterable
-            console.log('DEBUG: searchResultsRaw is a synchronous Iterable. Using Array.from.');
-            results = Array.from(searchResultsRaw);
-        } else {
-            // If neither, it's an unexpected type. Log and assign directly (will likely fail sort).
-            console.error('ERROR: searchResultsRaw is neither AsyncIterable nor synchronous Iterable. Type:', typeof searchResultsRaw, searchResultsRaw);
-            results = searchResultsRaw; // Fallback, will likely cause sort error
+        let results = [];
+        for await (const record of actualAsyncIterable) {
+            results.push(record);
         }
-        // 'results' is now a standard JavaScript Array (if iterable) or the raw object.
+        // 'results' is now a standard JavaScript Array, ready for sorting.
 
         // Optional: Prioritize results from the current file if provided
         if (currentFilePath) {
@@ -304,25 +295,16 @@ app.get('/debug/list-context', async (req, res) => {
         // We await the promise, then use Array.from() to ensure 'allRecords' is a standard JavaScript Array.
         // Fetch all records. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable (RecordBatchIterator).
         // We await the promise to get the AsyncIterable, then use 'for await...of' to collect results.
-        const allRecordsRaw = await table.query().limit(1000).execute();
-        let allRecords = [];
+        // Fetch all records. The execute() method returns a RecordBatchIterator,
+        // which contains a promisedInner that resolves to the actual AsyncIterable.
+        const recordBatchIterator = await table.query().limit(1000).execute();
+        const actualAsyncIterable = await recordBatchIterator.promisedInner; // Await the inner promise
 
-        // Check if the raw result is an AsyncIterable
-        if (typeof allRecordsRaw[Symbol.asyncIterator] === 'function') {
-            console.log('DEBUG: allRecordsRaw is an AsyncIterable. Using for await...of.');
-            for await (const record of allRecordsRaw) {
-                allRecords.push(record);
-            }
-        } else if (typeof allRecordsRaw[Symbol.iterator] === 'function') {
-            // If not AsyncIterable, check if it's a synchronous Iterable
-            console.log('DEBUG: allRecordsRaw is a synchronous Iterable. Using Array.from.');
-            allRecords = Array.from(allRecordsRaw);
-        } else {
-            // If neither, it's an unexpected type. Log and assign directly (will likely fail).
-            console.error('ERROR: allRecordsRaw is neither AsyncIterable nor synchronous Iterable. Type:', typeof allRecordsRaw, allRecordsRaw);
-            allRecords = allRecordsRaw; // Fallback
+        let allRecords = [];
+        for await (const record of actualAsyncIterable) {
+            allRecords.push(record);
         }
-        // 'allRecords' is now a standard JavaScript Array (if iterable) or the raw object.
+        // 'allRecords' is now a standard JavaScript Array.
         console.log(`Found ${allRecords.length} records.`);
         res.json({ count: allRecords.length, records: allRecords });
     } catch (error) {
