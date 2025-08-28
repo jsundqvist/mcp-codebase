@@ -239,9 +239,10 @@ app.post('/query-context', async (req, res) => {
         // Execute the search. LanceDB's execute() method returns a Promise that resolves to a synchronous iterable (or an array).
         // We await the promise, then use Array.from() to ensure 'results' is a standard JavaScript Array.
         const searchResultsRaw = await table.search(queryVector).limit(10).execute();
-        console.log('DEBUG: Type of searchResultsRaw (query):', typeof searchResultsRaw, Array.isArray(searchResultsRaw) ? 'is Array' : 'is NOT Array', searchResultsRaw[Symbol.iterator] ? 'is iterable' : 'is NOT iterable', searchResultsRaw[Symbol.asyncIterator] ? 'is async iterable' : 'is NOT async iterable');
-        let results = Array.from(searchResultsRaw);
-        // 'results' is now a standard JavaScript Array, ready for sorting.
+        console.log('DEBUG: Raw searchResults object from execute():', searchResultsRaw);
+        // We will determine how to process 'searchResultsRaw' after inspecting its structure.
+        // For now, we'll assign it directly, which will likely cause the sort error if it's not an array.
+        let results = searchResultsRaw;
 
         // Optional: Prioritize results from the current file if provided
         if (currentFilePath) {
@@ -286,8 +287,10 @@ app.get('/debug/list-context', async (req, res) => {
         // LanceDB's execute() method returns a Promise that resolves to a synchronous iterable (or an array).
         // We await the promise, then use Array.from() to ensure 'allRecords' is a standard JavaScript Array.
         const allRecordsRaw = await table.query().limit(1000).execute();
-        console.log('DEBUG: Type of allRecordsRaw (list):', typeof allRecordsRaw, Array.isArray(allRecordsRaw) ? 'is Array' : 'is NOT Array', allRecordsRaw[Symbol.iterator] ? 'is iterable' : 'is NOT iterable', allRecordsRaw[Symbol.asyncIterator] ? 'is async iterable' : 'is NOT async iterable');
-        let allRecords = Array.from(allRecordsRaw);
+        console.log('DEBUG: Raw allRecords object from execute():', allRecordsRaw);
+        // We will determine how to process 'allRecordsRaw' after inspecting its structure.
+        // For now, we'll assign it directly, which will likely cause errors if it's not an array.
+        let allRecords = allRecordsRaw;
         console.log(`Found ${allRecords.length} records.`);
         res.json({ count: allRecords.length, records: allRecords });
     } catch (error) {
