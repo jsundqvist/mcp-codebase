@@ -14,8 +14,7 @@ import { pipeline } from '@xenova/transformers';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const lancedb = require('@lancedb/lancedb');
-const { connect } = lancedb; // connect is a top-level export
-const { Field, DataType } = require('@lancedb/lancedb/dist/arrow'); // Field and DataType are in dist/arrow
+const { connect, Field, DataType } = lancedb; // connect, Field, DataType are top-level exports
 const { LanceSchema } = lancedb.embedding; // LanceSchema is under 'embedding'
 
 // --- Configuration ---
