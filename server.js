@@ -1,5 +1,5 @@
 import express from 'express';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } => from 'url';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -11,26 +11,7 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-import { connect } from '@lancedb/lancedb';
-// Import necessary data types, Field, and Schema from apache-arrow
-import { Utf8, Int32, FixedSizeList, Float32, Field as ArrowField, Schema } from 'apache-arrow';
-
-// Define a builder for schema fields that mimics LanceDB's expected Field API
-// This object provides factory methods for creating ArrowField instances.
-const LanceSchemaFieldBuilder = {
-    string: (name) => new ArrowField(name, new Utf8()),
-    int32: (name) => new ArrowField(name, new Int32()),
-    // For vector, LanceDB expects a FixedSizeList of Float32
-    vector: (name, dim) => {
-        const itemField = new ArrowField('item', new Float32());
-        const fixedSizeListType = new FixedSizeList(itemField, dim);
-        // HACK: Explicitly ensure children is an array for FixedSizeList DataType
-        // This works around a potential bug or incompatibility where fixedSizeListType.children is
-        // not correctly initialized or is not an iterable array.
-        fixedSizeListType.children = [itemField]; // Force it to be an array with the child field
-        return new ArrowField(name, fixedSizeListType);
-    }
-};
+import * as lancedb from '@lancedb/lancedb'; // Revert to wildcard import
 
 // --- Configuration ---
 const app = express();
@@ -66,19 +47,19 @@ async function initialize() {
 
     // 3. Initialize LanceDB
     console.log(`Initializing LanceDB at ${DB_PATH}...`);
-    db = await connect(DB_PATH); // Use connect directly
+    db = await lancedb.connect(DB_PATH); // Use lancedb.connect
     const tableName = 'code_context';
 
-    // Define the schema for our LanceDB table using apache-arrow's Schema and Field
-    const schema = new Schema([
-        LanceSchemaFieldBuilder.string('id'),
-        LanceSchemaFieldBuilder.string('text'),
-        LanceSchemaFieldBuilder.string('path'),
-        LanceSchemaFieldBuilder.int32('start_line'),
-        LanceSchemaFieldBuilder.int32('end_line'),
-        LanceSchemaFieldBuilder.string('type'),
-        LanceSchemaFieldBuilder.vector('vector', 384) // all-MiniLM-L6-v2 produces 384-dim vectors
-    ]);
+    // Define the schema for our LanceDB table using LanceDB's own LanceSchema
+    const schema = new lancedb.embedding.LanceSchema({
+        id: { type: "string" },
+        text: { type: "string" },
+        path: { type: "string" },
+        start_line: { type: "int32" },
+        end_line: { type: "int32" },
+        type: { type: "string" },
+        vector: { type: "vector", dim: 384 } // all-MiniLM-L6-v2 produces 384-dim vectors
+    });
 
     try {
         table = await db.openTable(tableName);
