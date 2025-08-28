@@ -48,6 +48,7 @@ async function initialize() {
     // 3. Initialize LanceDB
     console.log(`Initializing LanceDB at ${DB_PATH}...`);
     db = await lancedb.connect(DB_PATH);
+    console.log(`LanceDB connected to: ${DB_PATH}`);
     const tableName = 'code_context';
 
     // Define the schema for the LanceDB table explicitly
@@ -196,10 +197,12 @@ app.post('/ingest-context', async (req, res) => {
         }
 
         // Delete existing records for this file before adding new ones
+        // Delete existing records for this file before adding new ones
         // This ensures the database is up-to-date for the given file
         await table.delete(`path = '${filePath}'`);
+        console.log(`Records to add for ${filePath}:`, records); // Log the records before adding
         await table.add(records);
-        console.log(`Attempted to add ${records.length} records for ${filePath}`);
+        console.log(`Successfully called table.add() for ${records.length} records for ${filePath}`);
 
         console.log(`Successfully ingested ${records.length} contexts for ${filePath}`);
         res.json({ message: `Context ingested for ${filePath}`, count: records.length });
