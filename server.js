@@ -230,9 +230,11 @@ app.post('/query-context', async (req, res) => {
         console.log(`Querying context for: "${query}"`);
         const queryVector = await generateEmbedding(query);
 
-        let results = await table.search(queryVector)
-                                 .limit(10) // Get top 10 most relevant results
-                                 .execute();
+        // Execute the search and collect results into an array
+        let results = [];
+        for await (const result of await table.search(queryVector).limit(10).execute()) {
+            results.push(result);
+        }
 
         // Optional: Prioritize results from the current file if provided
         if (currentFilePath) {
