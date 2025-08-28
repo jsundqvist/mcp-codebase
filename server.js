@@ -232,7 +232,10 @@ app.post('/query-context', async (req, res) => {
 
         // Execute the search and collect results into an array
         let results = [];
-        for await (const result of await table.search(queryVector).limit(10).execute()) {
+        // LanceDB's execute() method returns a Promise that resolves to a synchronous iterable.
+        // We await the promise, then use a regular 'for...of' loop to iterate.
+        const searchResults = await table.search(queryVector).limit(10).execute();
+        for (const result of searchResults) {
             results.push(result);
         }
 
