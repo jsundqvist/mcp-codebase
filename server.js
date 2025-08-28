@@ -15,6 +15,10 @@ import { pipeline } from '@xenova/transformers';
 // in ES module contexts, treating module.exports as the 'lancedb' object.
 import * as lancedb from '@lancedb/lancedb';
 
+// --- DEBUGGING: Log the imported lancedb object to inspect its contents ---
+console.log('Inspecting LanceDB import:', lancedb);
+// --- END DEBUGGING ---
+
 // --- Configuration ---
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -274,4 +278,3 @@ initialize().then(() => {
     console.error('Failed to initialize MCP Server:', err);
     process.exit(1);
 });
-
