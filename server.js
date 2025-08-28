@@ -229,10 +229,14 @@ app.post('/query-context', async (req, res) => {
         console.log(`Querying context for: "${query}"`);
         const queryVector = await generateEmbedding(query);
 
-        // Execute the search. LanceDB's execute() method returns a Promise that resolves to a synchronous iterable.
-        // We await the promise, then use Array.from to collect all results into a standard JavaScript Array.
-        const searchResultsIterable = await table.search(queryVector).limit(10).execute();
-        let results = Array.from(searchResultsIterable);
+        // Execute the search. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
+        // We await the promise to get the AsyncIterable, then use 'for await...of' to collect results into an array.
+        const searchResultsAsyncIterable = await table.search(queryVector).limit(10).execute();
+        console.log('DEBUG: Type of searchResultsAsyncIterable:', typeof searchResultsAsyncIterable, searchResultsAsyncIterable[Symbol.asyncIterator] ? 'is async iterable' : 'is NOT async iterable');
+        let results = [];
+        for await (const record of searchResultsAsyncIterable) {
+            results.push(record);
+        }
         // 'results' is now a standard JavaScript Array, ready for sorting.
 
         // Optional: Prioritize results from the current file if provided
@@ -274,8 +278,14 @@ app.get('/debug/list-context', async (req, res) => {
         console.log('Fetching all records from LanceDB...');
         // Fetch all records. LanceDB's execute() method returns a Promise that resolves to a synchronous iterable.
         // We await the promise, then use Array.from to collect all results into a standard JavaScript Array.
-        const allRecordsIterable = await table.query().limit(1000).execute();
-        let allRecords = Array.from(allRecordsIterable);
+        // Fetch all records. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
+        // We await the promise to get the AsyncIterable, then use 'for await...of' to collect results.
+        const allRecordsAsyncIterable = await table.query().limit(1000).execute();
+        console.log('DEBUG: Type of allRecordsAsyncIterable:', typeof allRecordsAsyncIterable, allRecordsAsyncIterable[Symbol.asyncIterator] ? 'is async iterable' : 'is NOT async iterable');
+        let allRecords = [];
+        for await (const record of allRecordsAsyncIterable) {
+            allRecords.push(record);
+        }
         console.log(`Found ${allRecords.length} records.`);
         res.json({ count: allRecords.length, records: allRecords });
     } catch (error) {
