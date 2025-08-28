@@ -12,16 +12,16 @@ import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
 import { connect } from '@lancedb/lancedb';
-// Import necessary data types and Field from apache-arrow
-import { Utf8, Int32, FixedSizeList, Float32, Field as ArrowField } from 'apache-arrow';
+// Import necessary data types, Field, and Schema from apache-arrow
+import { Utf8, Int32, FixedSizeList, Float32, Field as ArrowField, Schema } from 'apache-arrow';
 
-// Define a custom Field object that mimics LanceDB's expected Field API
-// This object provides factory methods for Apache Arrow data types.
-const Field = {
-    string: () => new Utf8(),
-    int32: () => new Int32(),
+// Define a builder for schema fields that mimics LanceDB's expected Field API
+// This object provides factory methods for creating ArrowField instances.
+const LanceSchemaFieldBuilder = {
+    string: (name) => new ArrowField(name, new Utf8()),
+    int32: (name) => new ArrowField(name, new Int32()),
     // For vector, LanceDB expects a FixedSizeList of Float32
-    vector: (dim) => new FixedSizeList(new ArrowField('item', new Float32()), dim)
+    vector: (name, dim) => new ArrowField(name, new FixedSizeList(new ArrowField('item', new Float32()), dim))
 };
 
 // --- Configuration ---
@@ -61,18 +61,16 @@ async function initialize() {
     db = await connect(DB_PATH); // Use connect directly
     const tableName = 'code_context';
 
-    // Define the schema for our LanceDB table
-    // The 'vector' field will store our embeddings
-    // Other fields store metadata about the code snippet
-    const schema = {
-        id: Field.string(), // Use custom Field
-        text: Field.string(), // Use custom Field
-        path: Field.string(), // Use custom Field
-        start_line: Field.int32(), // Use custom Field
-        end_line: Field.int32(), // Use custom Field
-        type: Field.string(), // e.g., 'function', 'class', 'comment', 'variable'
-        vector: Field.vector(384) // all-MiniLM-L6-v2 produces 384-dim vectors // Use custom Field
-    };
+    // Define the schema for our LanceDB table using apache-arrow's Schema and Field
+    const schema = new Schema([
+        LanceSchemaFieldBuilder.string('id'),
+        LanceSchemaFieldBuilder.string('text'),
+        LanceSchemaFieldBuilder.string('path'),
+        LanceSchemaFieldBuilder.int32('start_line'),
+        LanceSchemaFieldBuilder.int32('end_line'),
+        LanceSchemaFieldBuilder.string('type'),
+        LanceSchemaFieldBuilder.vector('vector', 384) // all-MiniLM-L6-v2 produces 384-dim vectors
+    ]);
 
     try {
         table = await db.openTable(tableName);
