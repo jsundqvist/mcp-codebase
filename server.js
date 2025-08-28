@@ -12,7 +12,14 @@ import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
 import pkg from '@lancedb/lancedb';
-const { connect, Schema, Field, DataType } = pkg;
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
+// Import connect and Schema from the main pkg object
+const { connect, Schema } = pkg;
+
+// Import Field and DataType from the dist/arrow submodule using createRequire
+const { Field, DataType } = require('@lancedb/lancedb/dist/arrow');
 
 // --- Configuration ---
 const app = express();
