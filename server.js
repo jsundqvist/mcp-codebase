@@ -11,7 +11,7 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-import * as lancedb from '@lancedb/lancedb';
+import { connect, Schema, Field, DataType } from '@lancedb/lancedb';
 
 // --- Configuration ---
 const app = express();
@@ -50,15 +50,15 @@ async function initialize() {
     db = await lancedb.connect(DB_PATH);
     const tableName = 'code_context';
 
-    // Define the schema for the LanceDB table explicitly using lancedb.Schema and lancedb.Field
-    const codeContextSchema = lancedb.Schema({
-        id: lancedb.Field.string(),
-        text: lancedb.Field.string(),
-        path: lancedb.Field.string(),
-        start_line: lancedb.Field.int32(),
-        end_line: lancedb.Field.int32(),
-        type: lancedb.Field.string(),
-        vector: lancedb.Field.vector(384, lancedb.DataType.Float32),
+    // Define the schema for the LanceDB table explicitly using Schema and Field
+    const codeContextSchema = Schema({
+        id: Field.string(),
+        text: Field.string(),
+        path: Field.string(),
+        start_line: Field.int32(),
+        end_line: Field.int32(),
+        type: Field.string(),
+        vector: Field.vector(384, DataType.Float32),
     });
 
     try {
