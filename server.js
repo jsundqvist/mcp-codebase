@@ -15,7 +15,8 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const lancedb = require('@lancedb/lancedb');
 const { connect } = lancedb; // connect is a top-level export
-const { LanceSchema, Field, DataType } = lancedb.embedding; // Schema, Field, DataType are under 'embedding'
+const { Field, DataType } = require('@lancedb/lancedb/dist/arrow'); // Field and DataType are in dist/arrow
+const { LanceSchema } = lancedb.embedding; // LanceSchema is under 'embedding'
 
 // --- Configuration ---
 const app = express();
