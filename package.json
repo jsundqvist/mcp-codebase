@@ -1,13 +1,29 @@
-Initializing MCP Server...
-Loading Tree-sitter JavaScript parser...
-Tree-sitter parser loaded.
-Loading Transformers.js embedding model...
-Transformers.js embedding model loaded.
-Initializing LanceDB at /path/to/your/mcp-server-directory/lancedb_data...
-Table code_context not found, creating new one...
-Created new LanceDB table: code_context
-LanceDB initialized.
-MCP Server initialization complete.
-MCP Server listening on port 3000
-Ingest context: POST http://localhost:3000/ingest-context
-Query context: POST http://localhost:3000/query-context
+{
+  "name": "mcp-server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for AI code assistants",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "tree-sitter",
+    "transformers",
+    "lancedb",
+    "nodejs",
+    "ai",
+    "copilot"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@lancedb/lancedb": "^0.5.0",
+    "@xenova/transformers": "^2.17.0",
+    "express": "^4.19.2",
+    "tree-sitter": "^0.21.0",
+    "tree-sitter-javascript": "^0.20.0"
+  }
+}
