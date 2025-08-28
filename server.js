@@ -12,6 +12,7 @@ import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
 import pkg from '@lancedb/lancedb';
+console.log('DEBUG: LanceDB pkg object:', pkg);
 const { connect, Schema } = pkg;
 
 // --- Configuration ---
