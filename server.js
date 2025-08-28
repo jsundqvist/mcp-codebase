@@ -11,8 +11,7 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-import { connect } from '@lancedb/lancedb';
-import { Schema, Field, DataType } from '@lancedb/lancedb/arrow';
+import { connect, Schema, Field, DataType } from '@lancedb/lancedb';
 
 // --- Configuration ---
 const app = express();
