@@ -1,5 +1,5 @@
 import express from 'express';
-import { fileURLToPath } from 'url'; // Corrected line
+import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -51,7 +51,8 @@ async function initialize() {
     const tableName = 'code_context';
 
     // Define the schema for our LanceDB table using LanceDB's own LanceSchema
-    const schema = new lancedb.embedding.LanceSchema({
+    // Convert the plain object to a Map as expected by LanceSchema
+    const schema = new lancedb.embedding.LanceSchema(new Map(Object.entries({
         id: { type: "string" },
         text: { type: "string" },
         path: { type: "string" },
@@ -59,7 +60,7 @@ async function initialize() {
         end_line: { type: "int32" },
         type: { type: "string" },
         vector: { type: "vector", dim: 384 } // all-MiniLM-L6-v2 produces 384-dim vectors
-    });
+    })));
 
     try {
         table = await db.openTable(tableName);
