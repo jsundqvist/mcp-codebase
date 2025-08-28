@@ -14,7 +14,8 @@ import { pipeline } from '@xenova/transformers';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const lancedb = require('@lancedb/lancedb');
-const { connect, Schema, Field, DataType } = lancedb;
+const { connect } = lancedb; // connect is a top-level export
+const { LanceSchema, Field, DataType } = lancedb.embedding; // Schema, Field, DataType are under 'embedding'
 
 // --- Configuration ---
 const app = express();
@@ -54,7 +55,7 @@ async function initialize() {
     const tableName = 'code_context';
 
     // Define the schema for the LanceDB table explicitly using Schema and Field
-    const codeContextSchema = Schema({
+    const codeContextSchema = LanceSchema({ // Use LanceSchema
         id: Field.string(),
         text: Field.string(),
         path: Field.string(),
