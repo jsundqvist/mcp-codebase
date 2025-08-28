@@ -14,7 +14,7 @@ import { pipeline } from '@xenova/transformers';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const lancedb = require('@lancedb/lancedb');
-const { connect, Schema } = lancedb; // Only destructure connect and Schema
+const { connect, Schema, Field, DataType } = lancedb; // Destructure all necessary components
 
 // --- Configuration ---
 const app = express();
