@@ -230,10 +230,10 @@ app.post('/query-context', async (req, res) => {
         console.log(`Querying context for: "${query}"`);
         const queryVector = await generateEmbedding(query);
 
-        // Execute the search. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
-        // We await the promise to get the AsyncIterable, then use .toArray() to collect all results.
-        const searchResultsAsyncIterable = await table.search(queryVector).limit(10).execute();
-        let results = await searchResultsAsyncIterable.toArray();
+        // Execute the search. LanceDB's execute() method returns a Promise that resolves to a synchronous iterable (or an array).
+        // We await the promise, then use Array.from() to ensure 'results' is a standard JavaScript Array.
+        const searchResultsIterable = await table.search(queryVector).limit(10).execute();
+        let results = Array.from(searchResultsIterable);
         // 'results' is now a standard JavaScript Array, ready for sorting.
 
         // Optional: Prioritize results from the current file if provided
@@ -276,9 +276,10 @@ app.get('/debug/list-context', async (req, res) => {
         // Fetch all records. LanceDB's execute() method returns a Promise that resolves to a synchronous iterable.
         // We await the promise, then use Array.from to collect all results into a standard JavaScript Array.
         // Fetch all records. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
-        // We await the promise to get the AsyncIterable, then use .toArray() to collect all results.
-        const allRecordsAsyncIterable = await table.query().limit(1000).execute();
-        let allRecords = await allRecordsAsyncIterable.toArray();
+        // LanceDB's execute() method returns a Promise that resolves to a synchronous iterable (or an array).
+        // We await the promise, then use Array.from() to ensure 'allRecords' is a standard JavaScript Array.
+        const allRecordsIterable = await table.query().limit(1000).execute();
+        let allRecords = Array.from(allRecordsIterable);
         console.log(`Found ${allRecords.length} records.`);
         res.json({ count: allRecords.length, records: allRecords });
     } catch (error) {
