@@ -236,19 +236,9 @@ app.post('/query-context', async (req, res) => {
         console.log(`Querying context for: "${query}"`);
         const queryVector = await generateEmbedding(query);
 
-        // Execute the search. LanceDB's execute() method returns a Promise that resolves to a synchronous iterable (or an array).
-        // We await the promise, then use Array.from() to ensure 'results' is a standard JavaScript Array.
-        // Execute the search. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable (RecordBatchIterator).
-        // We await the promise to get the AsyncIterable, then use 'for await...of' to collect results into an array.
-        // Execute the search. The execute() method returns a RecordBatchIterator,
-        // which contains a promisedInner that resolves to the actual AsyncIterable.
-        // Execute the search. LanceDB's execute() method returns a Promise that resolves to a RecordBatchIterator.
-        // The RecordBatchIterator itself is an AsyncIterable.
-        const recordBatchIterator = await table.search(queryVector).limit(10).execute();
-        let results = [];
-        for await (const record of recordBatchIterator) {
-            results.push(record);
-        }
+        // Execute the search. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
+        // We await the promise to get the AsyncIterable, then use .toArray() to collect all results into a standard JavaScript Array.
+        let results = await (await table.search(queryVector).limit(10).execute()).toArray();
         // 'results' is now a standard JavaScript Array, ready for sorting.
 
         // Optional: Prioritize results from the current file if provided
@@ -288,22 +278,9 @@ app.get('/debug/list-context', async (req, res) => {
             return res.status(500).json({ error: 'LanceDB table not initialized.' });
         }
         console.log('Fetching all records from LanceDB...');
-        // Fetch all records. LanceDB's execute() method returns a Promise that resolves to a synchronous iterable.
-        // We await the promise, then use Array.from to collect all results into a standard JavaScript Array.
         // Fetch all records. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
-        // LanceDB's execute() method returns a Promise that resolves to a synchronous iterable (or an array).
-        // We await the promise, then use Array.from() to ensure 'allRecords' is a standard JavaScript Array.
-        // Fetch all records. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable (RecordBatchIterator).
-        // We await the promise to get the AsyncIterable, then use 'for await...of' to collect results.
-        // Fetch all records. The execute() method returns a RecordBatchIterator,
-        // which contains a promisedInner that resolves to the actual AsyncIterable.
-        // Fetch all records. LanceDB's execute() method returns a Promise that resolves to a RecordBatchIterator.
-        // The RecordBatchIterator itself is an AsyncIterable.
-        const recordBatchIterator = await table.query().limit(1000).execute();
-        let allRecords = [];
-        for await (const record of recordBatchIterator) {
-            allRecords.push(record);
-        }
+        // We await the promise to get the AsyncIterable, then use .toArray() to collect all results into a standard JavaScript Array.
+        let allRecords = await (await table.query().limit(1000).execute()).toArray();
         // 'allRecords' is now a standard JavaScript Array.
         console.log(`Found ${allRecords.length} records.`);
         res.json({ count: allRecords.length, records: allRecords });
