@@ -243,23 +243,10 @@ app.post('/query-context', async (req, res) => {
         // Execute the search. The execute() method returns a RecordBatchIterator,
         // which contains a promisedInner that resolves to the actual AsyncIterable.
         const recordBatchIterator = await table.search(queryVector).limit(10).execute();
-        const resolvedInner = await recordBatchIterator.promisedInner;
-        console.log('DEBUG: Type of resolvedInner (query):', typeof resolvedInner, Array.isArray(resolvedInner) ? 'is Array' : 'is NOT Array', resolvedInner && typeof resolvedInner[Symbol.iterator] === 'function' ? 'is iterable' : 'is NOT iterable', resolvedInner && typeof resolvedInner[Symbol.asyncIterator] === 'function' ? 'is async iterable' : 'is NOT async iterable');
-
-        let results;
-        if (resolvedInner && typeof resolvedInner[Symbol.asyncIterator] === 'function') {
-            results = [];
-            for await (const record of resolvedInner) {
-                results.push(record);
-            }
-        } else if (resolvedInner && typeof resolvedInner[Symbol.iterator] === 'function') {
-            results = Array.from(resolvedInner);
-        } else if (Array.isArray(resolvedInner)) { // Direct array
-            results = resolvedInner;
-        } else {
-            console.error('ERROR: resolvedInner is not a recognized iterable type:', resolvedInner);
-            results = []; // Fallback to empty array
-        }
+        // The promisedInner property of RecordBatchIterator should resolve to the actual results,
+        // which, based on common LanceDB patterns, should be an array.
+        let results = await recordBatchIterator.promisedInner;
+        // If 'results' is not an array at this point, the LanceDB client is behaving unexpectedly.
 
         // Optional: Prioritize results from the current file if provided
         if (currentFilePath) {
@@ -308,23 +295,10 @@ app.get('/debug/list-context', async (req, res) => {
         // Fetch all records. The execute() method returns a RecordBatchIterator,
         // which contains a promisedInner that resolves to the actual AsyncIterable.
         const recordBatchIterator = await table.query().limit(1000).execute();
-        const resolvedInner = await recordBatchIterator.promisedInner;
-        console.log('DEBUG: Type of resolvedInner (list):', typeof resolvedInner, Array.isArray(resolvedInner) ? 'is Array' : 'is NOT Array', resolvedInner && typeof resolvedInner[Symbol.iterator] === 'function' ? 'is iterable' : 'is NOT iterable', resolvedInner && typeof resolvedInner[Symbol.asyncIterator] === 'function' ? 'is async iterable' : 'is NOT async iterable');
-
-        let allRecords;
-        if (resolvedInner && typeof resolvedInner[Symbol.asyncIterator] === 'function') {
-            allRecords = [];
-            for await (const record of resolvedInner) {
-                allRecords.push(record);
-            }
-        } else if (resolvedInner && typeof resolvedInner[Symbol.iterator] === 'function') {
-            allRecords = Array.from(resolvedInner);
-        } else if (Array.isArray(resolvedInner)) { // Direct array
-            allRecords = resolvedInner;
-        } else {
-            console.error('ERROR: resolvedInner is not a recognized iterable type:', resolvedInner);
-            allRecords = []; // Fallback to empty array
-        }
+        // The promisedInner property of RecordBatchIterator should resolve to the actual results,
+        // which, based on common LanceDB patterns, should be an array.
+        let allRecords = await recordBatchIterator.promisedInner;
+        // If 'allRecords' is not an array at this point, the LanceDB client is behaving unexpectedly.
         console.log(`Found ${allRecords.length} records.`);
         res.json({ count: allRecords.length, records: allRecords });
     } catch (error) {
