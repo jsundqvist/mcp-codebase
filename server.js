@@ -242,11 +242,14 @@ app.post('/query-context', async (req, res) => {
         // We await the promise to get the AsyncIterable, then use 'for await...of' to collect results into an array.
         // Execute the search. The execute() method returns a RecordBatchIterator,
         // which contains a promisedInner that resolves to the actual AsyncIterable.
+        // Execute the search. LanceDB's execute() method returns a Promise that resolves to a RecordBatchIterator.
+        // The RecordBatchIterator itself is an AsyncIterable.
         const recordBatchIterator = await table.search(queryVector).limit(10).execute();
-        // The promisedInner property of RecordBatchIterator should resolve to the actual results,
-        // which, based on common LanceDB patterns, should be an array.
-        let results = await recordBatchIterator.promisedInner;
-        // If 'results' is not an array at this point, the LanceDB client is behaving unexpectedly.
+        let results = [];
+        for await (const record of recordBatchIterator) {
+            results.push(record);
+        }
+        // 'results' is now a standard JavaScript Array, ready for sorting.
 
         // Optional: Prioritize results from the current file if provided
         if (currentFilePath) {
@@ -294,11 +297,14 @@ app.get('/debug/list-context', async (req, res) => {
         // We await the promise to get the AsyncIterable, then use 'for await...of' to collect results.
         // Fetch all records. The execute() method returns a RecordBatchIterator,
         // which contains a promisedInner that resolves to the actual AsyncIterable.
+        // Fetch all records. LanceDB's execute() method returns a Promise that resolves to a RecordBatchIterator.
+        // The RecordBatchIterator itself is an AsyncIterable.
         const recordBatchIterator = await table.query().limit(1000).execute();
-        // The promisedInner property of RecordBatchIterator should resolve to the actual results,
-        // which, based on common LanceDB patterns, should be an array.
-        let allRecords = await recordBatchIterator.promisedInner;
-        // If 'allRecords' is not an array at this point, the LanceDB client is behaving unexpectedly.
+        let allRecords = [];
+        for await (const record of recordBatchIterator) {
+            allRecords.push(record);
+        }
+        // 'allRecords' is now a standard JavaScript Array.
         console.log(`Found ${allRecords.length} records.`);
         res.json({ count: allRecords.length, records: allRecords });
     } catch (error) {
