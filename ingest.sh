@@ -1,0 +1,2 @@
+#!/bin/bash
+curl -X POST http://localhost:3000/ingest-context -H "Content-Type: application/json" -d '{"filePath": "my_project/utils.js", "code": "function calculateSum(a, b) {\n  return a + b;\n}\n\nclass MyUtility {\n  constructor() {\n    this.name = \"utility\";\n  }\n}"}'
