@@ -8,12 +8,8 @@ rm -rf node_modules package-lock.json
 echo "2. Clearing npm cache..."
 npm cache clean --force
 
-echo "3. Running npm install to fetch fresh dependencies..."
-npm install
-
-echo "4. Running npm run install-deps for native module compilation..."
-# This script already contains CXXFLAGS="-std=c++20" npm install
-# which will trigger node-gyp rebuilds for native modules.
-npm run install-deps
+echo "3. Running npm install to fetch fresh dependencies with CXXFLAGS..."
+# Set CXXFLAGS for native module compilation before npm install
+CXXFLAGS="-std=c++20" npm install
 
 echo "Installation complete. Please try 'npm start' now."

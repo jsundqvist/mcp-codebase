@@ -6,7 +6,6 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "install-deps": "CXXFLAGS=\"-std=c++20\" npm install"
   },
   "keywords": [
     "mcp",
