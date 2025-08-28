@@ -50,16 +50,16 @@ async function initialize() {
     db = await lancedb.connect(DB_PATH);
     const tableName = 'code_context';
 
-    // Define the schema for the LanceDB table explicitly
-    const codeContextSchema = {
-        id: { type: "string", nullable: false },
-        text: { type: "string", nullable: false },
-        path: { type: "string", nullable: false },
-        start_line: { type: "int32", nullable: false },
-        end_line: { type: "int32", nullable: false },
-        type: { type: "string", nullable: false },
-        vector: { type: "vector", dim: 384, value_type: "float32", nullable: false }
-    };
+    // Define the schema for the LanceDB table explicitly using lancedb.Schema and lancedb.Field
+    const codeContextSchema = lancedb.Schema({
+        id: lancedb.Field.string(),
+        text: lancedb.Field.string(),
+        path: lancedb.Field.string(),
+        start_line: lancedb.Field.int32(),
+        end_line: lancedb.Field.int32(),
+        type: lancedb.Field.string(),
+        vector: lancedb.Field.vector(384, lancedb.DataType.Float32),
+    });
 
     try {
         table = await db.openTable(tableName);
