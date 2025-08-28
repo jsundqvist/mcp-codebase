@@ -230,12 +230,12 @@ app.post('/query-context', async (req, res) => {
         console.log(`Querying context for: "${query}"`);
         const queryVector = await generateEmbedding(query);
 
-        // Execute the search and collect results into an array
+        // Execute the search and collect results into an array.
+        // LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
+        // We await the promise to get the AsyncIterable, then use 'for await...of' to iterate.
+        const searchResultsAsyncIterable = await table.search(queryVector).limit(10).execute();
         let results = [];
-        // LanceDB's execute() method returns a Promise that resolves to a synchronous iterable.
-        // We await the promise, then use a regular 'for...of' loop to iterate.
-        const searchResults = await table.search(queryVector).limit(10).execute();
-        for (const result of searchResults) {
+        for await (const result of searchResultsAsyncIterable) {
             results.push(result);
         }
 
