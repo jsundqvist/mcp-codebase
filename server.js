@@ -11,7 +11,7 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-import * as lancedb from '@lancedb/lancedb'; // Revert to wildcard import
+import * as lancedb from '@lancedb/lancedb';
 
 // --- Configuration ---
 const app = express();
@@ -47,27 +47,27 @@ async function initialize() {
 
     // 3. Initialize LanceDB
     console.log(`Initializing LanceDB at ${DB_PATH}...`);
-    db = await lancedb.connect(DB_PATH); // Use lancedb.connect
+    db = await lancedb.connect(DB_PATH);
     const tableName = 'code_context';
 
-    // Define the schema for our LanceDB table using LanceDB's own LanceSchema
-    // Convert the plain object to a Map as expected by LanceSchema
-    const schema = new lancedb.embedding.LanceSchema(new Map(Object.entries({
-        id: { type: "string" },
-        text: { type: "string" },
-        path: { type: "string" },
-        start_line: { type: "int32" },
-        end_line: { type: "int32" },
-        type: { type: "string" },
-        vector: { type: "vector", dim: 384 } // all-MiniLM-L6-v2 produces 384-dim vectors
-    })));
+    // Define a dummy record for schema inference
+    const dummyRecord = {
+        id: "dummy_id",
+        text: "dummy_text",
+        path: "dummy_path.js",
+        start_line: 0,
+        end_line: 0,
+        type: "dummy_type",
+        vector: Array(384).fill(0.0) // A vector of 384 floats
+    };
 
     try {
         table = await db.openTable(tableName);
         console.log(`Opened existing LanceDB table: ${tableName}`);
     } catch (e) {
         console.log(`Table ${tableName} not found, creating new one...`);
-        table = await db.createTable(tableName, schema);
+        // Create table by inferring schema from a dummy record
+        table = await db.createTable(tableName, [dummyRecord]);
         console.log(`Created new LanceDB table: ${tableName}`);
     }
     console.log('LanceDB initialized.');
