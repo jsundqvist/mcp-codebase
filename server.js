@@ -239,12 +239,20 @@ app.post('/query-context', async (req, res) => {
         // Execute the search. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
         // We await the promise to get the AsyncIterable, then use .toArray() to collect all results into a standard JavaScript Array.
         const recordBatchIterator = await table.search(queryVector).limit(10).execute();
-        console.log('DEBUG: recordBatchIterator has [Symbol.asyncIterator]?', typeof recordBatchIterator[Symbol.asyncIterator] === 'function');
-        // Explicitly get the async iterator from the RecordBatchIterator
-        const actualAsyncIterator = recordBatchIterator[Symbol.asyncIterator]();
         let results = [];
-        for await (const record of actualAsyncIterator) {
-            results.push(record);
+        let nextResult;
+        // Manually iterate using the next() method, as for await...of is failing.
+        // The documentation states RecordBatchIterator implements AsyncIterator,
+        // which means it must have a next() method returning Promise<IteratorResult>.
+        while (!(nextResult = await recordBatchIterator.next()).done) {
+            // nextResult.value is a RecordBatch. We need to extract records from it.
+            // Assuming RecordBatch has a toArray() method to get the actual records.
+            if (typeof nextResult.value.toArray === 'function') {
+                results.push(...nextResult.value.toArray());
+            } else {
+                // Fallback if RecordBatch doesn't have toArray(), assuming it's a single record or iterable.
+                results.push(nextResult.value);
+            }
         }
         // 'results' is now a standard JavaScript Array, ready for sorting.
 
@@ -288,12 +296,15 @@ app.get('/debug/list-context', async (req, res) => {
         // Fetch all records. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
         // We await the promise to get the AsyncIterable, then use .toArray() to collect all results into a standard JavaScript Array.
         const recordBatchIterator = await table.query().limit(1000).execute();
-        console.log('DEBUG: recordBatchIterator has [Symbol.asyncIterator]?', typeof recordBatchIterator[Symbol.asyncIterator] === 'function');
-        // Explicitly get the async iterator from the RecordBatchIterator
-        const actualAsyncIterator = recordBatchIterator[Symbol.asyncIterator]();
         let allRecords = [];
-        for await (const record of actualAsyncIterator) {
-            allRecords.push(record);
+        let nextResult;
+        // Manually iterate using the next() method, as for await...of is failing.
+        while (!(nextResult = await recordBatchIterator.next()).done) {
+            if (typeof nextResult.value.toArray === 'function') {
+                allRecords.push(...nextResult.value.toArray());
+            } else {
+                allRecords.push(nextResult.value);
+            }
         }
         // 'allRecords' is now a standard JavaScript Array.
         console.log(`Found ${allRecords.length} records.`);
