@@ -11,8 +11,9 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-// Reverting to direct named imports as per LanceDB's package.json exports
-import { connect, Field } from '@lancedb/lancedb';
+// Correct way to import from a CommonJS module in an ES module context
+import pkg from '@lancedb/lancedb';
+const { connect, Field } = pkg;
 
 // --- Configuration ---
 const app = express();
