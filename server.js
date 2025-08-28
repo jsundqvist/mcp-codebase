@@ -243,12 +243,9 @@ app.post('/query-context', async (req, res) => {
         // Execute the search. The execute() method returns a RecordBatchIterator,
         // which contains a promisedInner that resolves to the actual AsyncIterable.
         const recordBatchIterator = await table.search(queryVector).limit(10).execute();
-        const actualAsyncIterable = await recordBatchIterator.promisedInner; // Await the inner promise
-
-        let results = [];
-        for await (const record of actualAsyncIterable) {
-            results.push(record);
-        }
+        // Await the promisedInner, and then convert to an array.
+        // This handles cases where promisedInner resolves to a synchronous iterable or an array.
+        let results = Array.from(await recordBatchIterator.promisedInner);
         // 'results' is now a standard JavaScript Array, ready for sorting.
 
         // Optional: Prioritize results from the current file if provided
@@ -298,12 +295,9 @@ app.get('/debug/list-context', async (req, res) => {
         // Fetch all records. The execute() method returns a RecordBatchIterator,
         // which contains a promisedInner that resolves to the actual AsyncIterable.
         const recordBatchIterator = await table.query().limit(1000).execute();
-        const actualAsyncIterable = await recordBatchIterator.promisedInner; // Await the inner promise
-
-        let allRecords = [];
-        for await (const record of actualAsyncIterable) {
-            allRecords.push(record);
-        }
+        // Await the promisedInner, and then convert to an array.
+        // This handles cases where promisedInner resolves to a synchronous iterable or an array.
+        let allRecords = Array.from(await recordBatchIterator.promisedInner);
         // 'allRecords' is now a standard JavaScript Array.
         console.log(`Found ${allRecords.length} records.`);
         res.json({ count: allRecords.length, records: allRecords });
