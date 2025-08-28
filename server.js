@@ -25,10 +25,9 @@ const LanceSchemaFieldBuilder = {
         const itemField = new ArrowField('item', new Float32());
         const fixedSizeListType = new FixedSizeList(itemField, dim);
         // HACK: Explicitly ensure children is an array for FixedSizeList DataType
-        // This works around a potential bug or incompatibility where fixedSizeListType.children is undefined
-        if (!fixedSizeListType.children) {
-            fixedSizeListType.children = [itemField];
-        }
+        // This works around a potential bug or incompatibility where fixedSizeListType.children is
+        // not correctly initialized or is not an iterable array.
+        fixedSizeListType.children = [itemField]; // Force it to be an array with the child field
         return new ArrowField(name, fixedSizeListType);
     }
 };
