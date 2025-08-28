@@ -11,8 +11,8 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-import pkg from '@lancedb/lancedb'; // Import the default export
-const { connect, Field } = pkg; // Destructure connect and Field from the default export
+// Reverting to direct named imports as per LanceDB's package.json exports
+import { connect, Field } from '@lancedb/lancedb';
 
 // --- Configuration ---
 const app = express();
@@ -48,20 +48,20 @@ async function initialize() {
 
     // 3. Initialize LanceDB
     console.log(`Initializing LanceDB at ${DB_PATH}...`);
-    db = await connect(DB_PATH); // Updated usage
+    db = await connect(DB_PATH);
     const tableName = 'code_context';
 
     // Define the schema for our LanceDB table
     // The 'vector' field will store our embeddings
     // Other fields store metadata about the code snippet
     const schema = {
-        id: Field.string(), // Updated usage
-        text: Field.string(), // Updated usage
-        path: Field.string(), // Updated usage
-        start_line: Field.int32(), // Updated usage
-        end_line: Field.int32(), // Updated usage
+        id: Field.string(),
+        text: Field.string(),
+        path: Field.string(),
+        start_line: Field.int32(),
+        end_line: Field.int32(),
         type: Field.string(), // e.g., 'function', 'class', 'comment', 'variable'
-        vector: Field.vector(384) // all-MiniLM-L6-v2 produces 384-dim vectors // Updated usage
+        vector: Field.vector(384) // all-MiniLM-L6-v2 produces 384-dim vectors
     };
 
     try {
