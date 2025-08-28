@@ -53,13 +53,13 @@ async function initialize() {
 
     // Define the schema for the LanceDB table explicitly using Schema and Field
     const codeContextSchema = Schema({
-        id: pkg.types.Field.string(),
-        text: pkg.types.Field.string(),
-        path: pkg.types.Field.string(),
-        start_line: pkg.types.Field.int32(),
-        end_line: pkg.types.Field.int32(),
-        type: pkg.types.Field.string(),
-        vector: pkg.types.Field.vector(384, pkg.types.DataType.Float32),
+        id: pkg.Field.string(),
+        text: pkg.Field.string(),
+        path: pkg.Field.string(),
+        start_line: pkg.Field.int32(),
+        end_line: pkg.Field.int32(),
+        type: pkg.Field.string(),
+        vector: pkg.Field.vector(384, pkg.DataType.Float32),
     });
 
     try {
