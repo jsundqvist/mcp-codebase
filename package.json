@@ -5,8 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "postinstall": "npm rebuild tree-sitter --build-from-source --CXXFLAGS=\"-std=c++20\""
+    "start": "node server.js"
   },
   "keywords": [
     "mcp",
