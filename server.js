@@ -11,10 +11,9 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-// Import connect from the main package
 import { connect } from '@lancedb/lancedb';
-// Import Field from its specific compiled path, as it's not directly exposed by the main package
-import { Field } from '@lancedb/lancedb/dist/arrow.mjs';
+// Import Field directly from apache-arrow, as it's not reliably exposed by @lancedb/lancedb
+import { Field } from 'apache-arrow';
 
 // --- Configuration ---
 const app = express();
