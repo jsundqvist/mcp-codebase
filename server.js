@@ -11,15 +11,7 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-import pkg from '@lancedb/lancedb';
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-
-// Import connect and Schema from the main pkg object
-const { connect, Schema } = pkg;
-
-// Import Field and DataType from the dist/arrow submodule using createRequire
-const { Field, DataType } = require('@lancedb/lancedb/dist/arrow');
+import { connect, Schema, Field, DataType } from '@lancedb/lancedb';
 
 // --- Configuration ---
 const app = express();
