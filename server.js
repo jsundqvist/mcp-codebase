@@ -273,13 +273,10 @@ app.get('/debug/list-context', async (req, res) => {
             return res.status(500).json({ error: 'LanceDB table not initialized.' });
         }
         console.log('Fetching all records from LanceDB...');
-        // Fetch all records. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
-        // We await the promise to get the AsyncIterable, then use 'for await...of' to collect results.
-        const allRecordsAsyncIterable = await table.query().limit(1000).execute();
-        let allRecords = [];
-        for await (const record of allRecordsAsyncIterable) {
-            allRecords.push(record);
-        }
+        // Fetch all records. LanceDB's execute() method returns a Promise that resolves to a synchronous iterable.
+        // We await the promise, then use Array.from to collect all results into a standard JavaScript Array.
+        const allRecordsIterable = await table.query().limit(1000).execute();
+        let allRecords = Array.from(allRecordsIterable);
         console.log(`Found ${allRecords.length} records.`);
         res.json({ count: allRecords.length, records: allRecords });
     } catch (error) {
