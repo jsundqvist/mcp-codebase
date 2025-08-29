@@ -2,20 +2,15 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs/promises';
-import { createRequire } from 'module'; // Import createRequire
-
 // Tree-sitter imports
 import Parser from 'tree-sitter';
 import JavaScript from 'tree-sitter-javascript';
 
 // Transformers.js imports
-import { pipeline } from '@xenova/transformers';
+import { pipeline } => '@xenova/transformers';
 
 // LanceDB imports
-// Use createRequire to explicitly load the CommonJS version of lancedb
-const require = createRequire(import.meta.url);
-const lancedb_raw_module = require('@lancedb/lancedb');
-const { connect, Schema, Field, DataType } = lancedb_raw_module.default || lancedb_raw_module;
+import { connect, Schema, Field } from '@lancedb/lancedb';
 
 // --- Configuration ---
 const app = express();
