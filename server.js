@@ -2,6 +2,7 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs/promises';
+import { createRequire } from 'module'; // Import createRequire
 
 // Tree-sitter imports
 import Parser from 'tree-sitter';
@@ -11,7 +12,9 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-import * as lancedb from '@lancedb/lancedb';
+// Use createRequire to explicitly load the CommonJS version of lancedb
+const require = createRequire(import.meta.url);
+const { connect, Schema, Field, DataType } = require('@lancedb/lancedb');
 
 // --- Configuration ---
 const app = express();
@@ -51,14 +54,14 @@ async function initialize() {
     const tableName = 'code_context';
 
     // Define the schema for the LanceDB table explicitly using Schema and Field
-    const codeContextSchema = new lancedb.Schema({
-        id: lancedb.Schema.Field.string(),
-        text: lancedb.Schema.Field.string(),
-        path: lancedb.Schema.Field.string(),
-        start_line: lancedb.Schema.Field.int32(),
-        end_line: lancedb.Schema.Field.int32(),
-        type: lancedb.Schema.Field.string(),
-        vector: lancedb.Schema.Field.vector(384, lancedb.Schema.DataType.Float32),
+    const codeContextSchema = new Schema({
+        id: Schema.Field.string(),
+        text: Schema.Field.string(),
+        path: Schema.Field.string(),
+        start_line: Schema.Field.int32(),
+        end_line: Schema.Field.int32(),
+        type: Schema.Field.string(),
+        vector: Schema.Field.vector(384, DataType.Float32),
     });
 
     try {
