@@ -2,6 +2,7 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs/promises';
+
 // Tree-sitter imports
 import Parser from 'tree-sitter';
 import JavaScript from 'tree-sitter-javascript';
@@ -9,13 +10,8 @@ import JavaScript from 'tree-sitter-javascript';
 // Transformers.js imports
 import { pipeline } from '@xenova/transformers';
 
-import { createRequire } from 'module'; // Import createRequire
-
 // LanceDB imports
-import pkg from '@lancedb/lancedb';
-const connect = pkg.connect;
-const Schema = pkg.Schema;
-// Field and DataType are properties of Schema in this version of LanceDB
+import * as lancedb from '@lancedb/lancedb';
 
 // --- Configuration ---
 const app = express();
@@ -51,19 +47,20 @@ async function initialize() {
 
     // 3. Initialize LanceDB
     console.log(`Initializing LanceDB at ${DB_PATH}...`);
-    db = await connect(DB_PATH);
+    db = await lancedb.connect(DB_PATH);
+    console.log(`LanceDB connected to: ${DB_PATH}`);
     const tableName = 'code_context';
 
-    // Define the schema for the LanceDB table explicitly using Schema and Field
-    const codeContextSchema = new Schema({
-        id: Schema.Field.string(),
-        text: Schema.Field.string(),
-        path: Schema.Field.string(),
-        start_line: Schema.Field.int32(),
-        end_line: Schema.Field.int32(),
-        type: Schema.Field.string(),
-        vector: Schema.Field.vector(384, Schema.DataType.Float32),
-    });
+    // Define the schema for the LanceDB table explicitly
+    const codeContextSchema = {
+        id: { type: "string", nullable: false },
+        text: { type: "string", nullable: false },
+        path: { type: "string", nullable: false },
+        start_line: { type: "int32", nullable: false },
+        end_line: { type: "int32", nullable: false },
+        type: { type: "string", nullable: false },
+        vector: { type: "vector", dim: 384, value_type: "float32", nullable: false }
+    };
 
     try {
         table = await db.openTable(tableName);
@@ -203,7 +200,12 @@ app.post('/ingest-context', async (req, res) => {
         // Delete existing records for this file before adding new ones
         // This ensures the database is up-to-date for the given file
         await table.delete(`path = '${filePath}'`);
+        console.log(`Records to add for ${filePath}:`, records); // Log the records before adding
         await table.add(records);
+        console.log(`Successfully called table.add() for ${records.length} records for ${filePath}`);
+        // Verify count immediately after adding
+        const currentTableCount = await table.countRows();
+        console.log(`Current table row count after add: ${currentTableCount}`);
 
         console.log(`Successfully ingested ${records.length} contexts for ${filePath}`);
         res.json({ message: `Context ingested for ${filePath}`, count: records.length });
@@ -236,7 +238,7 @@ app.post('/query-context', async (req, res) => {
 
         // Execute the search. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
         // We await the promise to get the AsyncIterable, then use .toArray() to collect all results into a standard JavaScript Array.
-        const recordBatchIterator = await table.search(queryVector).limit(10).metric("cosine").execute();
+        const recordBatchIterator = await table.search(queryVector).limit(10).execute();
         let results = [];
         let nextResult;
         // Manually iterate using the next() method, as for await...of is failing.
