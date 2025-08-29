@@ -13,7 +13,9 @@ import { createRequire } from 'module'; // Import createRequire
 
 // LanceDB imports
 const require = createRequire(import.meta.url);
-const { connect, Schema, Field, DataType } = require('@lancedb/lancedb');
+const { connect } = require('@lancedb/lancedb');
+// For older versions, Schema, Field, and DataType must be imported from a submodule
+const { Schema, Field, DataType } = require('@lancedb/lancedb/dist/arrow');
 
 // --- Configuration ---
 const app = express();
