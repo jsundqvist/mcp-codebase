@@ -51,6 +51,18 @@ async function initialize() {
     console.log(`LanceDB connected to: ${DB_PATH}`);
     const tableName = 'code_context';
 
+    // --- DEBUGGING LANCEDB IMPORTS ---
+    console.log('--- Debugging LanceDB object ---');
+    console.log('lancedb:', lancedb);
+    console.log('lancedb.Schema:', lancedb.Schema);
+    if (lancedb.Schema) {
+        console.log('lancedb.Schema.Field:', lancedb.Schema.Field);
+        console.log('lancedb.Schema.DataType:', lancedb.Schema.DataType);
+    }
+    console.log('lancedb.Field (direct):', lancedb.Field);
+    console.log('lancedb.DataType (direct):', lancedb.DataType);
+    console.log('--------------------------------');
+
     // Define the schema for the LanceDB table explicitly
     const codeContextSchema = new lancedb.Schema({
         id: lancedb.Field.string(),
