@@ -12,7 +12,7 @@ import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
 import pkg from '@lancedb/lancedb';
-const { connect, embedding, Int32, Utf8, Float32 } = pkg;
+const { connect, embedding } = pkg;
 
 // --- Configuration ---
 const app = express();
@@ -54,13 +54,13 @@ async function initialize() {
 
     // Define the schema for the LanceDB table explicitly
     const codeContextSchema = new embedding.LanceSchema({
-        id: new Utf8(), // string type
-        text: new Utf8(), // string type
-        path: new Utf8(), // string type
-        start_line: new Int32(), // int32 type
-        end_line: new Int32(), // int32 type
-        type: new Utf8(), // string type
-        vector: new Float32(384), // vector type with dimension 384
+        id: new embedding.Utf8(), // string type
+        text: new embedding.Utf8(), // string type
+        path: new embedding.Utf8(), // string type
+        start_line: new embedding.Int32(), // int32 type
+        end_line: new embedding.Int32(), // int32 type
+        type: new embedding.Utf8(), // string type
+        vector: new embedding.Float32(384), // vector type with dimension 384
     });
 
     try {
