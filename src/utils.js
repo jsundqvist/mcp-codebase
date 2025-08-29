@@ -9,11 +9,11 @@ export async function extractCodeContext(code, filePath = 'untitled.js') {
     let idCounter = 0;
 
     const query = new Parser.Query(JavaScript, `
-        (function_declaration
+        (function_declaration 
             name: (identifier) @name
             body: (statement_block) @body) @function
 
-        (class_declaration
+        (class_declaration 
             name: (identifier) @name
             body: (class_body) @body) @class
 
@@ -21,14 +21,15 @@ export async function extractCodeContext(code, filePath = 'untitled.js') {
             name: (identifier) @name
             value: (_) @value) @variable
 
-        (export_statement
-            declaration: [
-                (function_declaration) @export_function
-                (class_declaration) @export_class
-                (variable_declaration) @export_variable
-            ]) @export
-
         (comment) @comment
+
+        (call_expression
+            function: (identifier) @called_function) @call
+
+        (call_expression
+            function: (member_expression 
+                object: (identifier) @object
+                property: (property_identifier) @property)) @method_call
     `);
 
     // First, collect all comments to associate them with nearby declarations
@@ -81,6 +82,37 @@ export async function extractCodeContext(code, filePath = 'untitled.js') {
             identifier = nameNode.text;
         } else {
             continue;
+        }
+
+        // Extract function call relationships
+        if (type === 'function' || type === 'class') {
+            const functionCalls = new Set();
+
+            // Get all function calls in the body
+            for (const match of query.matches(bodyNode)) {
+                if (match.captures.find(c => c.name === 'called_function')) {
+                    const calledFunction = match.captures.find(c => c.name === 'called_function').node.text;
+                    functionCalls.add(calledFunction);
+                }
+                
+                const object = match.captures.find(c => c.name === 'object')?.node?.text;
+                const property = match.captures.find(c => c.name === 'property')?.node?.text;
+                if (object && property) {
+                    functionCalls.add(`${object}.${property}`);
+                }
+            }
+
+            if (functionCalls.size > 0) {
+                const callContext = `Function ${identifier} calls: ${Array.from(functionCalls).join(', ')}`;
+                contexts.push({
+                    id: `${filePath}::${identifier}_calls::${idCounter++}`,
+                    text: callContext,
+                    path: filePath,
+                    start_line: startLine,
+                    end_line: endLine,
+                    type: 'function_calls'
+                });
+            }
         }
 
         // Extract file-level context for larger functions/classes
