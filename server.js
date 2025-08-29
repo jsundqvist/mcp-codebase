@@ -68,6 +68,7 @@ async function initialize() {
         new Field('end_line', new Int32()),
         new Field('type', new Utf8()),
         new Field('vector', new FixedSizeList(384, new Field('item', new Float32()))),
+        new Field('file_hash', new Utf8()), // Hash of file contents for detecting changes
     ]);
 
     let table;
@@ -85,7 +86,8 @@ async function initialize() {
             start_line: 0,
             end_line: 0,
             type: 'dummy',
-            vector: Array(384).fill(0)
+            vector: Array(384).fill(0),
+            file_hash: 'dummy'
         }];
         
         table = await db.createTable(tableName, dummyData, {
