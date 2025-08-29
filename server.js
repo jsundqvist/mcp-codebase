@@ -11,7 +11,7 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-import * as lancedb from '@lancedb/lancedb';
+import { connect, embedding, Int32, Utf8, Float32 } from '@lancedb/lancedb';
 
 // --- Configuration ---
 const app = express();
@@ -52,14 +52,14 @@ async function initialize() {
     const tableName = 'code_context';
 
     // Define the schema for the LanceDB table explicitly
-    const codeContextSchema = new lancedb.embedding.LanceSchema({
-        id: lancedb.embedding.LanceSchema.Field.string(),
-        text: lancedb.embedding.LanceSchema.Field.string(),
-        path: lancedb.embedding.LanceSchema.Field.string(),
-        start_line: lancedb.embedding.LanceSchema.Field.int32(),
-        end_line: lancedb.embedding.LanceSchema.Field.int32(),
-        type: lancedb.embedding.LanceSchema.Field.string(),
-        vector: lancedb.embedding.LanceSchema.Field.vector(384, lancedb.embedding.LanceSchema.DataType.Float32),
+    const codeContextSchema = new embedding.LanceSchema({
+        id: new Utf8(), // string type
+        text: new Utf8(), // string type
+        path: new Utf8(), // string type
+        start_line: new Int32(), // int32 type
+        end_line: new Int32(), // int32 type
+        type: new Utf8(), // string type
+        vector: new Float32(384), // vector type with dimension 384
     });
 
     try {
