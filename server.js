@@ -51,27 +51,15 @@ async function initialize() {
     console.log(`LanceDB connected to: ${DB_PATH}`);
     const tableName = 'code_context';
 
-    // --- DEBUGGING LANCEDB IMPORTS ---
-    console.log('--- Debugging LanceDB object ---');
-    console.log('lancedb:', lancedb);
-    console.log('lancedb.Schema:', lancedb.Schema);
-    if (lancedb.Schema) {
-        console.log('lancedb.Schema.Field:', lancedb.Schema.Field);
-        console.log('lancedb.Schema.DataType:', lancedb.Schema.DataType);
-    }
-    console.log('lancedb.Field (direct):', lancedb.Field);
-    console.log('lancedb.DataType (direct):', lancedb.DataType);
-    console.log('--------------------------------');
-
     // Define the schema for the LanceDB table explicitly
-    const codeContextSchema = new lancedb.Schema({
-        id: lancedb.Field.string(),
-        text: lancedb.Field.string(),
-        path: lancedb.Field.string(),
-        start_line: lancedb.Field.int32(),
-        end_line: lancedb.Field.int32(),
-        type: lancedb.Field.string(),
-        vector: lancedb.Field.vector(384, lancedb.DataType.Float32),
+    const codeContextSchema = new lancedb.embedding.LanceSchema({
+        id: lancedb.embedding.LanceSchema.Field.string(),
+        text: lancedb.embedding.LanceSchema.Field.string(),
+        path: lancedb.embedding.LanceSchema.Field.string(),
+        start_line: lancedb.embedding.LanceSchema.Field.int32(),
+        end_line: lancedb.embedding.LanceSchema.Field.int32(),
+        type: lancedb.embedding.LanceSchema.Field.string(),
+        vector: lancedb.embedding.LanceSchema.Field.vector(384, lancedb.embedding.LanceSchema.DataType.Float32),
     });
 
     try {
