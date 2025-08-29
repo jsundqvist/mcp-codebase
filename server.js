@@ -2,6 +2,8 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs/promises';
+import { createRequire } from 'module'; // Import createRequire
+
 // Tree-sitter imports
 import Parser from 'tree-sitter';
 import JavaScript from 'tree-sitter-javascript';
@@ -10,7 +12,10 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-import { connect, Schema } from '@lancedb/lancedb';
+const require = createRequire(import.meta.url);
+const lancedb_exports = require('@lancedb/lancedb');
+const connect = lancedb_exports.connect;
+const Schema = lancedb_exports.Schema;
 
 // --- Configuration ---
 const app = express();
