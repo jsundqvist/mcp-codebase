@@ -53,13 +53,13 @@ async function initialize() {
 
     // Define the schema for the LanceDB table explicitly
     const codeContextSchema = new lancedb.embedding.LanceSchema({
-        id: new lancedb.types.Utf8(), // string type
-        text: new lancedb.types.Utf8(), // string type
-        path: new lancedb.types.Utf8(), // string type
-        start_line: new lancedb.types.Int32(), // int32 type
-        end_line: new lancedb.types.Int32(), // int32 type
-        type: new lancedb.types.Utf8(), // string type
-        vector: new lancedb.types.Float32(384), // vector type with dimension 384
+        id: new lancedb.schema.Utf8(), // string type
+        text: new lancedb.schema.Utf8(), // string type
+        path: new lancedb.schema.Utf8(), // string type
+        start_line: new lancedb.schema.Int32(), // int32 type
+        end_line: new lancedb.schema.Int32(), // int32 type
+        type: new lancedb.schema.Utf8(), // string type
+        vector: new lancedb.schema.Float32(384), // vector type with dimension 384
     });
 
     try {
