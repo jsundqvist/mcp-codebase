@@ -11,7 +11,7 @@ import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
 import pkg from '@lancedb/lancedb';
-const { connect, Schema, Field, DataType } = pkg;
+const { connect, Schema } = pkg;
 
 // --- Configuration ---
 const app = express();
@@ -52,13 +52,13 @@ async function initialize() {
 
     // Define the schema for the LanceDB table explicitly using Schema and Field
     const codeContextSchema = new Schema({
-        id: Field.string(),
-        text: Field.string(),
-        path: Field.string(),
-        start_line: Field.int32(),
-        end_line: Field.int32(),
-        type: Field.string(),
-        vector: Field.vector(384, DataType.Float32),
+        id: Schema.Field.string(),
+        text: Schema.Field.string(),
+        path: Schema.Field.string(),
+        start_line: Schema.Field.int32(),
+        end_line: Schema.Field.int32(),
+        type: Schema.Field.string(),
+        vector: Schema.Field.vector(384, Schema.DataType.Float32),
     });
 
     try {
