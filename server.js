@@ -15,6 +15,12 @@ import { pipeline } from '@xenova/transformers';
 import * as lancedb from '@lancedb/lancedb';
 import { Field, FixedSizeList, Int32, Utf8, Float32, Schema } from 'apache-arrow';
 
+import { setParser, setEmbedder, setDb, setTable } from './src/globals.js';
+import { ingestProjectFiles } from './src/ingestion.js';
+import ingestRoute from './src/routes/ingest.js';
+import queryRoute from './src/routes/query.js';
+import debugRoute from './src/routes/debug.js';
+
 // --- Configuration ---
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,14 +28,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_PATH = path.join(__dirname, 'lancedb_data'); // Path for LanceDB storage
 
-// --- Global Instances ---
-let parser;
-let embedder;
-let db;
-let table; // Our LanceDB table for code context
-
 // --- Middleware ---
-app.use(express.json({ limit: '50mb' })); // Allow larger JSON bodies for code snippets
+app.use(express.json({ limit: '50mb' }));
+
+// --- Routes ---
+app.use(ingestRoute);
+app.use(queryRoute);
+app.use(debugRoute);
 
 // --- Initialization Function ---
 async function initialize() {
@@ -37,287 +42,72 @@ async function initialize() {
 
     // 1. Initialize Tree-sitter Parser
     console.log('Loading Tree-sitter JavaScript and Java parsers...');
-    parser = new Parser();
-    // Set JavaScript as the default language for now, but we can extend this to support multiple.
+    const parser = new Parser();
     parser.setLanguage(JavaScript);
-    // You can also load other languages if needed, e.g., parser.setLanguage(Java);
+    setParser(parser);
     console.log('Tree-sitter parsers loaded.');
 
     // 2. Initialize Transformers.js Embedder
     console.log('Loading Transformers.js embedding model...');
-    // Using a small, fast sentence-transformer model for demonstration
-    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    setEmbedder(embedder);
     console.log('Transformers.js embedding model loaded.');
 
     // 3. Initialize LanceDB
     console.log(`Initializing LanceDB at ${DB_PATH}...`);
-    db = await lancedb.connect(DB_PATH);
+    const db = await lancedb.connect(DB_PATH);
+    setDb(db);
     console.log(`LanceDB connected to: ${DB_PATH}`);
     const tableName = 'code_context';
 
-    // Define the schema for the LanceDB table explicitly using Apache Arrow types
     const codeContextSchema = new Schema([
-        new Field('id', new Utf8()), // string type
-        new Field('text', new Utf8()), // string type
-        new Field('path', new Utf8()), // string type
-        new Field('start_line', new Int32()), // int32 type
-        new Field('end_line', new Int32()), // int32 type
-        new Field('type', new Utf8()), // string type
-        new Field('vector', new FixedSizeList(384, new Field('item', new Float32()))), // vector type with dimension 384
+        new Field('id', new Utf8()),
+        new Field('text', new Utf8()),
+        new Field('path', new Utf8()),
+        new Field('start_line', new Int32()),
+        new Field('end_line', new Int32()),
+        new Field('type', new Utf8()),
+        new Field('vector', new FixedSizeList(384, new Field('item', new Float32()))),
     ]);
 
+    let table;
     try {
+        // Try to open the table, if it fails, it will be created.
         table = await db.openTable(tableName);
         console.log(`Opened existing LanceDB table: ${tableName}`);
     } catch (e) {
         console.log(`Table ${tableName} not found, creating new one with explicit schema...`);
-        table = await db.createTable(tableName, [], { schema: codeContextSchema });
-        console.log(`Created new LanceDB table: ${tableName}`);
+        
+        const dummyData = [{
+            id: 'dummy',
+            text: 'dummy',
+            path: 'dummy',
+            start_line: 0,
+            end_line: 0,
+            type: 'dummy',
+            vector: Array(384).fill(0)
+        }];
+        
+        table = await db.createTable(tableName, dummyData, {
+            schema: codeContextSchema,
+            vectorIndex: {
+                type: 'ivf_pq',
+                metric: 'cosine',
+            }
+        });
+        
+        // Since we added dummy data to create the table, we should delete it immediately after.
+        await table.delete("id = 'dummy'");
+        console.log(`Created new LanceDB table: ${tableName} with cosine metric.`);
     }
+    setTable(table);
     console.log('LanceDB initialized.');
+
+    // 4. Ingest all project files on startup
+    await ingestProjectFiles(__dirname);
 
     console.log('MCP Server initialization complete.');
 }
-
-// --- Helper Functions ---
-
-/**
- * Parses code using Tree-sitter and extracts meaningful nodes.
- * For simplicity, this example extracts top-level function and class declarations.
- * In a real scenario, you'd extract more granular context.
- * @param {string} code The source code string.
- * @param {string} filePath The path of the file (for metadata).
- * @returns {Array<Object>} An array of extracted code snippets with metadata.
- */
-async function extractCodeContext(code, filePath = 'untitled.js') {
-    const tree = parser.parse(code);
-    const contexts = [];
-    let idCounter = 0;
-
-    // Example: Find function and class declarations
-    // Create a Tree-sitter Query object using the JavaScript language and the query string.
-    const query = new Parser.Query(JavaScript, `
-        (function_declaration name: (identifier) @name body: (statement_block) @body)
-        (class_declaration name: (identifier) @name body: (class_body) @body)
-        (variable_declarator name: (identifier) @name value: (_) @value)
-    `);
-
-    for (const match of query.matches(tree.rootNode)) {
-        const nameNode = match.captures.find(c => c.name === 'name')?.node;
-        const bodyNode = match.captures.find(c => c.name === 'body')?.node;
-        const valueNode = match.captures.find(c => c.name === 'value')?.node;
-
-        let snippetText = '';
-        let type = 'unknown';
-        let startLine = 0;
-        let endLine = 0;
-        let identifier = 'anonymous';
-
-        if (nameNode && bodyNode) {
-            snippetText = bodyNode.text;
-            type = nameNode.parent.type === 'function_declaration' ? 'function' : 'class';
-            startLine = nameNode.parent.startPosition.row;
-            endLine = nameNode.parent.endPosition.row;
-            identifier = nameNode.text;
-        } else if (nameNode && valueNode) {
-            snippetText = valueNode.text;
-            type = 'variable';
-            startLine = nameNode.parent.startPosition.row;
-            endLine = nameNode.parent.endPosition.row;
-            identifier = nameNode.text;
-        } else {
-            continue; // Skip if we can't get meaningful context
-        }
-
-        contexts.push({
-            id: `${filePath}::${identifier}::${idCounter++}`, // Unique ID for the snippet
-            text: snippetText,
-            path: filePath,
-            start_line: startLine,
-            end_line: endLine,
-            type: type,
-            identifier: identifier // Store the name of the function/class/variable
-        });
-    }
-
-    // Also add the full file content as a general context
-    contexts.push({
-        id: `${filePath}::full_file`,
-        text: code,
-        path: filePath,
-        start_line: 0,
-        end_line: code.split('\n').length - 1,
-        type: 'file',
-        identifier: 'full_file'
-    });
-
-    return contexts;
-}
-
-/**
- * Generates embeddings for a given text using the loaded Transformers.js model.
- * @param {string} text The text to embed.
- * @returns {Promise<Array<number>>} The embedding vector.
- */
-async function generateEmbedding(text) {
-    const output = await embedder(text, { pooling: 'mean', normalize: true });
-    return Array.from(output.data);
-}
-
-// --- API Endpoints ---
-
-/**
- * Endpoint to ingest code context into the LanceDB.
- * This would typically be called by an IDE extension when a file is saved or opened.
- * Request Body:
- * {
- *   "filePath": "path/to/your/file.js",
- *   "code": "console.log('Hello World'); function foo() {}"
- * }
- */
-app.post('/ingest-context', async (req, res) => {
-    const { filePath, code } = req.body;
-
-    if (!filePath || !code) {
-        return res.status(400).json({ error: 'filePath and code are required.' });
-    }
-
-    try {
-        console.log(`Ingesting context for: ${filePath}`);
-        const contexts = await extractCodeContext(code, filePath);
-        const records = [];
-
-        for (const ctx of contexts) {
-            const vector = await generateEmbedding(ctx.text);
-            records.push({
-                id: ctx.id,
-                text: ctx.text,
-                path: ctx.path,
-                start_line: ctx.start_line,
-                end_line: ctx.end_line,
-                type: ctx.type,
-                vector: vector
-            });
-        }
-
-        // Delete existing records for this file before adding new ones
-        // Delete existing records for this file before adding new ones
-        // This ensures the database is up-to-date for the given file
-        await table.delete(`path = '${filePath}'`);
-        console.log(`Records to add for ${filePath}:`, records); // Log the records before adding
-        await table.add(records);
-        console.log(`Successfully called table.add() for ${records.length} records for ${filePath}`);
-        // Verify count immediately after adding
-        const currentTableCount = await table.countRows();
-        console.log(`Current table row count after add: ${currentTableCount}`);
-
-        console.log(`Successfully ingested ${records.length} contexts for ${filePath}`);
-        res.json({ message: `Context ingested for ${filePath}`, count: records.length });
-
-    } catch (error) {
-        console.error(`Error ingesting context for ${filePath}:`, error);
-        res.status(500).json({ error: 'Failed to ingest context', details: error.message });
-    }
-});
-
-/**
- * Endpoint to query for relevant code context based on a natural language query or code snippet.
- * This would be called by the AI model or client to get context.
- * Request Body:
- * {
- *   "query": "How do I read a file in Node.js?",
- *   "currentFilePath": "path/to/current/file.js" // Optional: to prioritize context from the same file
- * }
- */
-app.post('/query-context', async (req, res) => {
-    const { query, currentFilePath } = req.body;
-
-    if (!query) {
-        return res.status(400).json({ error: 'query is required.' });
-    }
-
-    try {
-        console.log(`Querying context for: "${query}"`);
-        const queryVector = await generateEmbedding(query);
-
-        // Execute the search. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
-        // We await the promise to get the AsyncIterable, then use .toArray() to collect all results into a standard JavaScript Array.
-        const recordBatchIterator = await table.search(queryVector).limit(10).execute();
-        let results = [];
-        let nextResult;
-        // Manually iterate using the next() method, as for await...of is failing.
-        // The documentation states RecordBatchIterator implements AsyncIterator,
-        // which means it must have a next() method returning Promise<IteratorResult>.
-        while (!(nextResult = await recordBatchIterator.next()).done) {
-            // nextResult.value is a RecordBatch. We need to extract records from it.
-            // Assuming RecordBatch has a toArray() method to get the actual records.
-            if (typeof nextResult.value.toArray === 'function') {
-                results.push(...nextResult.value.toArray());
-            } else {
-                // Fallback if RecordBatch doesn't have toArray(), assuming it's a single record or iterable.
-                results.push(nextResult.value);
-            }
-        }
-        // 'results' is now a standard JavaScript Array, ready for sorting.
-
-        // Optional: Prioritize results from the current file if provided
-        if (currentFilePath) {
-            results.sort((a, b) => {
-                const aIsCurrentFile = a.path === currentFilePath;
-                const bIsCurrentFile = b.path === currentFilePath;
-                if (aIsCurrentFile && !bIsCurrentFile) return -1;
-                if (!aIsCurrentFile && bIsCurrentFile) return 1;
-                return b._distance - a._distance; // Maintain original relevance for others
-            });
-        }
-
-        console.log(`Found ${results.length} relevant contexts.`);
-        res.json({ results: results.map(r => ({
-            text: r.text,
-            path: r.path,
-            start_line: r.start_line,
-            end_line: r.end_line,
-            type: r.type,
-            score: 1 - r._distance // Convert distance to a similarity score (0-1)
-        }))});
-
-    } catch (error) {
-        console.error(`Error querying context for "${query}":`, error);
-        res.status(500).json({ error: 'Failed to query context', details: error.message });
-    }
-});
-
-/**
- * Debug endpoint to list all ingested context records.
- * This is for debugging purposes to inspect the database contents.
- */
-app.get('/debug/list-context', async (req, res) => {
-    try {
-        if (!table) {
-            return res.status(500).json({ error: 'LanceDB table not initialized.' });
-        }
-        console.log('Fetching all records from LanceDB...');
-        // Fetch all records. LanceDB's execute() method returns a Promise that resolves to an AsyncIterable.
-        // We await the promise to get the AsyncIterable, then use .toArray() to collect all results into a standard JavaScript Array.
-        const recordBatchIterator = await table.query().limit(1000).execute();
-        let allRecords = [];
-        let nextResult;
-        // Manually iterate using the next() method, as for await...of is failing.
-        while (!(nextResult = await recordBatchIterator.next()).done) {
-            if (typeof nextResult.value.toArray === 'function') {
-                allRecords.push(...nextResult.value.toArray());
-            } else {
-                allRecords.push(nextResult.value);
-            }
-        }
-        // 'allRecords' is now a standard JavaScript Array.
-        console.log(`Found ${allRecords.length} records.`);
-        res.json({ count: allRecords.length, records: allRecords });
-    } catch (error) {
-        console.error('Error listing all context:', error);
-        res.status(500).json({ error: 'Failed to list context', details: error.message });
-    }
-});
 
 // --- Start Server ---
 initialize().then(() => {

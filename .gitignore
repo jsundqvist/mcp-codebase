@@ -1,2 +1,4 @@
 .aider*
 lancedb_data
+node_modules
+server.log
