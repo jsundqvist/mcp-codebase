@@ -13,3 +13,7 @@ echo "3. Running npm install to fetch fresh dependencies with CXXFLAGS..."
 CXXFLAGS="-std=c++20" npm install
 
 echo "Installation complete. Please try 'npm start' now."
+
+echo "Rebuilding tree-sitter and tree-sitter-javascript..."
+./rebuild-tree-sitter.sh tree-sitter
+./rebuild-tree-sitter.sh tree-sitter-javascript

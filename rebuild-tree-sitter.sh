@@ -1,15 +1,27 @@
 #!/bin/bash
+# Rebuilds a specified Tree-sitter module using node-gyp.
+# Usage: ./rebuild-tree-sitter.sh <module_name>
+# Example: ./rebuild-tree-sitter.sh tree-sitter-javascript
+
+MODULE_NAME=$1
+
+if [ -z "$MODULE_NAME" ]; then
+  echo "Usage: $0 <module_name>"
+  echo "Example: $0 tree-sitter-javascript"
+  exit 1
+fi
+
 # Ensure node-gyp uses the currently active Node.js version
 # Get current Node.js version and architecture
 NODE_VERSION=$(node -v | sed 's/v//')
 NODE_ARCH=$(node -p "process.arch")
 NODE_ABI=$(node -p "process.versions.modules") # NODE_MODULE_VERSION
 
-echo "Rebuilding tree-sitter for Node.js v${NODE_VERSION} (ABI: ${NODE_ABI}, Arch: ${NODE_ARCH})..."
+echo "Rebuilding ${MODULE_NAME} for Node.js v${NODE_VERSION} (ABI: ${NODE_ABI}, Arch: ${NODE_ARCH})..."
 
-# Change to the tree-sitter module directory
-(cd node_modules/tree-sitter && \
-  echo "Cleaning tree-sitter build artifacts..." && \
+# Change to the specified module directory
+(cd "node_modules/${MODULE_NAME}" && \
+  echo "Cleaning ${MODULE_NAME} build artifacts..." && \
   rm -rf build/Release && \
   # Use npx to run the locally installed node-gyp
   # Pass CXXFLAGS and explicit target/arch to node-gyp

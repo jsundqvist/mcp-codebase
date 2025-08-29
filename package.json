@@ -27,5 +27,8 @@
     "tree-sitter-javascript": "latest",
     "node-gyp": "latest",
     "apache-arrow": "^15.0.0"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.20.8"
   }
 }
