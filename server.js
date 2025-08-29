@@ -7,7 +7,7 @@ import Parser from 'tree-sitter';
 import JavaScript from 'tree-sitter-javascript';
 
 // Transformers.js imports
-import { pipeline } => '@xenova/transformers';
+import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
 import { connect, Schema, Field } from '@lancedb/lancedb';
