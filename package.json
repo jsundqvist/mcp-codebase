@@ -25,6 +25,7 @@
     "express": "^4.19.2",
     "tree-sitter": "latest",
     "tree-sitter-javascript": "latest",
-    "node-gyp": "latest"
+    "node-gyp": "latest",
+    "apache-arrow": "^15.0.0"
   }
 }

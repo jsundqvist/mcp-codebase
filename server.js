@@ -12,6 +12,7 @@ import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
 import * as lancedb from '@lancedb/lancedb';
+import { Field, FixedSizeList, Int32, Utf8, Float32, Schema } from 'apache-arrow';
 
 // --- Configuration ---
 const app = express();
@@ -51,16 +52,16 @@ async function initialize() {
     console.log(`LanceDB connected to: ${DB_PATH}`);
     const tableName = 'code_context';
 
-    // Define the schema for the LanceDB table explicitly
-    const codeContextSchema = new lancedb.LanceSchema({
-        id: new lancedb.Utf8(), // string type
-        text: new lancedb.Utf8(), // string type
-        path: new lancedb.Utf8(), // string type
-        start_line: new lancedb.Int32(), // int32 type
-        end_line: new lancedb.Int32(), // int32 type
-        type: new lancedb.Utf8(), // string type
-        vector: new lancedb.Float32(384), // vector type with dimension 384
-    });
+    // Define the schema for the LanceDB table explicitly using Apache Arrow types
+    const codeContextSchema = new Schema([
+        new Field('id', new Utf8()), // string type
+        new Field('text', new Utf8()), // string type
+        new Field('path', new Utf8()), // string type
+        new Field('start_line', new Int32()), // int32 type
+        new Field('end_line', new Int32()), // int32 type
+        new Field('type', new Utf8()), // string type
+        new Field('vector', new FixedSizeList(384, new Field('item', new Float32()))), // vector type with dimension 384
+    ]);
 
     try {
         table = await db.openTable(tableName);
