@@ -11,7 +11,8 @@ import JavaScript from 'tree-sitter-javascript';
 import { pipeline } from '@xenova/transformers';
 
 // LanceDB imports
-import { connect, embedding, Int32, Utf8, Float32 } from '@lancedb/lancedb';
+import pkg from '@lancedb/lancedb';
+const { connect, embedding, Int32, Utf8, Float32 } = pkg;
 
 // --- Configuration ---
 const app = express();
