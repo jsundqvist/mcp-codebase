@@ -14,7 +14,7 @@ import { pipeline } from '@xenova/transformers';
 // LanceDB imports
 // Use createRequire to explicitly load the CommonJS version of lancedb
 const require = createRequire(import.meta.url);
-const { connect, Schema, Field, DataType } = require('@lancedb/lancedb');
+const lancedb_module = require('@lancedb/lancedb');
 
 // --- Configuration ---
 const app = express();
@@ -50,18 +50,18 @@ async function initialize() {
 
     // 3. Initialize LanceDB
     console.log(`Initializing LanceDB at ${DB_PATH}...`);
-    db = await connect(DB_PATH);
+    db = await lancedb_module.connect(DB_PATH);
     const tableName = 'code_context';
 
     // Define the schema for the LanceDB table explicitly using Schema and Field
-    const codeContextSchema = new Schema({
-        id: Schema.Field.string(),
-        text: Schema.Field.string(),
-        path: Schema.Field.string(),
-        start_line: Schema.Field.int32(),
-        end_line: Schema.Field.int32(),
-        type: Schema.Field.string(),
-        vector: Schema.Field.vector(384, DataType.Float32),
+    const codeContextSchema = new lancedb_module.Schema({
+        id: lancedb_module.Schema.Field.string(),
+        text: lancedb_module.Schema.Field.string(),
+        path: lancedb_module.Schema.Field.string(),
+        start_line: lancedb_module.Schema.Field.int32(),
+        end_line: lancedb_module.Schema.Field.int32(),
+        type: lancedb_module.Schema.Field.string(),
+        vector: lancedb_module.Schema.Field.vector(384, lancedb_module.DataType.Float32),
     });
 
     try {
