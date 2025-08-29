@@ -1,7 +1,7 @@
 // src/routes/query.js
 import express from 'express';
 import { table } from '../globals.js';
-import { generateEmbedding } from '../utils.js';
+import { generateEmbedding } from '../context-extractor.js';
 
 const router = express.Router();
 

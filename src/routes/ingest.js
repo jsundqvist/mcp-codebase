@@ -1,7 +1,7 @@
 // src/routes/ingest.js
 import express from 'express';
 import { table } from '../globals.js';
-import { extractCodeContext, generateEmbedding } from '../utils.js';
+import { extractCodeContext, generateEmbedding } from '../context-extractor.js';
 
 const router = express.Router();
 

@@ -2,7 +2,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { table } from './globals.js';
-import { extractCodeContext, generateEmbedding } from './utils.js';
+import { extractCodeContext, generateEmbedding } from './context-extractor.js';
 
 export async function ingestProjectFiles(projectRoot) {
     console.log('Starting ingestion of project files...');
