@@ -14,6 +14,7 @@ CXXFLAGS="-std=c++20" npm install
 
 echo "Installation complete. Please try 'npm start' now."
 
-echo "Rebuilding tree-sitter and tree-sitter-javascript..."
+echo "Rebuilding tree-sitter, tree-sitter-javascript, and tree-sitter-java..."
 ./rebuild-tree-sitter.sh tree-sitter
 ./rebuild-tree-sitter.sh tree-sitter-javascript
+./rebuild-tree-sitter.sh tree-sitter-java

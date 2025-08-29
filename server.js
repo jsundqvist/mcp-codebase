@@ -6,6 +6,7 @@ import fs from 'fs/promises';
 // Tree-sitter imports
 import Parser from 'tree-sitter';
 import JavaScript from 'tree-sitter-javascript';
+import Java from 'tree-sitter-java';
 
 // Transformers.js imports
 import { pipeline } from '@xenova/transformers';
@@ -35,10 +36,12 @@ async function initialize() {
     console.log('Initializing MCP Server...');
 
     // 1. Initialize Tree-sitter Parser
-    console.log('Loading Tree-sitter JavaScript parser...');
+    console.log('Loading Tree-sitter JavaScript and Java parsers...');
     parser = new Parser();
+    // Set JavaScript as the default language for now, but we can extend this to support multiple.
     parser.setLanguage(JavaScript);
-    console.log('Tree-sitter parser loaded.');
+    // You can also load other languages if needed, e.g., parser.setLanguage(Java);
+    console.log('Tree-sitter parsers loaded.');
 
     // 2. Initialize Transformers.js Embedder
     console.log('Loading Transformers.js embedding model...');
