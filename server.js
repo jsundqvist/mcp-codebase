@@ -68,7 +68,7 @@ async function initialize() {
         console.log(`Opened existing LanceDB table: ${tableName}`);
     } catch (e) {
         console.log(`Table ${tableName} not found, creating new one with explicit schema...`);
-        table = await db.createTable(tableName, codeContextSchema);
+        table = await db.createTable(tableName, [], { schema: codeContextSchema });
         console.log(`Created new LanceDB table: ${tableName}`);
     }
     console.log('LanceDB initialized.');
