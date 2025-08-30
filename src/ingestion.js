@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { table } from './globals.js';
-import { extractCodeContext, generateEmbedding } from './context-extractor.js';
+import { extractComments, extractContextFromCapture } from './context-extractor.js';
 
 async function getFileHash(content) {
     const hash = crypto.createHash('sha256');
@@ -45,31 +45,36 @@ async function needsReingestion(filePath, code) {
     }
 }
 
-export async function ingestProjectFiles(projectRoot) {
-    console.log('Starting incremental ingestion of project files...');
-
-    async function findJsFiles(dir) {
-        let jsFiles = [];
-        try {
-            const entries = await fs.readdir(dir, { withFileTypes: true });
-            for (const entry of entries) {
-                const fullPath = path.join(dir, entry.name);
-                if (entry.isDirectory()) {
-                    if (entry.name !== 'node_modules' && entry.name !== '.git' && entry.name !== 'build' && entry.name !== 'lancedb_data' && !entry.name.startsWith('.')) {
-                        jsFiles = jsFiles.concat(await findJsFiles(fullPath));
-                    }
-                } else if (path.extname(entry.name) === '.js') {
-                    jsFiles.push(fullPath);
+async function findFilesByExtensions(dir, extensions) {
+    let matchingFiles = [];
+    try {
+        const entries = await fs.readdir(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                // Skip common excluded directories
+                if (entry.name !== 'node_modules' && 
+                    entry.name !== '.git' && 
+                    entry.name !== 'build' && 
+                    entry.name !== 'lancedb_data' && 
+                    !entry.name.startsWith('.')) {
+                    matchingFiles = matchingFiles.concat(await findFilesByExtensions(fullPath, extensions));
                 }
+            } else if (extensions.includes(path.extname(entry.name))) {
+                matchingFiles.push(fullPath);
             }
-        } catch (error) {
-            console.error(`Error reading directory ${dir}:`, error);
         }
-        return jsFiles;
+    } catch (error) {
+        console.error(`Error reading directory ${dir}:`, error);
     }
+    return matchingFiles;
+}
 
-    const filesToIngest = await findJsFiles(projectRoot);
-    console.log(`Found ${filesToIngest.length} .js files to ingest.`);
+export async function ingestProjectFiles(projectRoot, extensions, parser) {
+    console.log(`Starting incremental ingestion for extensions: ${extensions.join(', ')}...`);
+    
+    const filesToIngest = await findFilesByExtensions(projectRoot, extensions);
+    console.log(`Found ${filesToIngest.length} files matching ${extensions.join(', ')} to ingest.`);
 
     for (const filePath of filesToIngest) {
         try {
@@ -81,35 +86,50 @@ export async function ingestProjectFiles(projectRoot) {
             }
             
             console.log(`Ingesting modified file: ${filePath}`);
-            const contexts = await extractCodeContext(code, filePath);
-            if (contexts.length === 0) {
-                console.log(`No contexts extracted from ${filePath}. Skipping.`);
+            
+            // Use the provided parser to extract contexts
+            const query = parser.query;
+            const tree = parser.parser.parse(code);
+            const comments = extractComments(query, tree);
+            const captures = query.captures(tree.rootNode);
+            
+            if (captures.length === 0) {
+                console.log(`No contexts found in ${filePath}. Skipping.`);
                 continue;
             }
 
             const fileHash = await getFileHash(code);
             const records = [];
-            for (const ctx of contexts) {
-                const vector = await generateEmbedding(ctx.text);
-                records.push({
-                    id: ctx.id,
-                    text: ctx.text,
-                    path: ctx.path,
-                    start_line: ctx.start_line,
-                    end_line: ctx.end_line,
-                    type: ctx.type,
-                    vector: vector,
-                    file_hash: fileHash
-                });
+            
+            for (const capture of captures) {
+                const contexts = await extractContextFromCapture(capture, code, filePath, parser, comments);
+                
+                for (const ctx of contexts) {
+                    const id = crypto.randomBytes(16).toString('hex');
+                    records.push({
+                        id,
+                        text: ctx.text,
+                        path: filePath,
+                        start_line: ctx.start_line,
+                        end_line: ctx.end_line,
+                        type: ctx.type,
+                        vector: ctx.vector,
+                        file_hash: fileHash
+                    });
+                }
+            }
+            
+            if (records.length > 0) {
+                await table.delete(`path = '${filePath.replace(/\\/g, '\\\\')}'`);
+                await table.add(records);
+                console.log(`Successfully ingested ${records.length} contexts for ${filePath}`);
+            } else {
+                console.log(`No valid contexts extracted from ${filePath}. Skipping.`);
             }
 
-            await table.delete(`path = '${filePath.replace(/\\/g, '\\\\')}'`);
-            await table.add(records);
-            console.log(`Successfully ingested ${records.length} contexts for ${filePath}`);
-
         } catch (error) {
-            console.error(`Failed to ingest ${filePath} on startup:`, error);
+            console.error(`Failed to ingest ${filePath}:`, error);
         }
     }
-    console.log('Project file ingestion complete.');
+    console.log(`Ingestion complete for extensions: ${extensions.join(', ')}.`);
 }

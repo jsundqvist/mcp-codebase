@@ -73,6 +73,39 @@ while (!(nextResult = await recordBatchIterator.next()).done) {
 }
 ```
 
+### Parser Development
+
+When developing or modifying Tree-sitter parsers in this project, follow these patterns:
+
+#### Query Organization
+- Keep query patterns in separate files (e.g., `javascript-query.js`, `typescript-query.js`)
+- Group related patterns together (functions, classes, modules, etc.)
+- Add single-line comments above each pattern group to describe what it captures
+- Use clear and consistent capture names (e.g., `@name`, `@class_name`, `@method_name`)
+
+#### Testing Parser Changes
+1. Start with a single pattern and its test
+2. Write focused test cases with minimal code examples
+3. Test each pattern type separately before combining
+4. Include positive test cases for all supported variations
+5. Use descriptive test names that match the pattern being tested
+
+#### Query Pattern Development
+1. Keep patterns simple and focused
+2. Use proper Tree-sitter field captures (e.g., `name:`, `body:`)
+3. Test patterns incrementally before adding complexity
+4. Consider common variations of the syntax
+5. Document pattern assumptions and limitations
+
+#### Supported Pattern Types
+Currently supported JavaScript patterns include:
+- Function declarations and calls
+- Class declarations and methods
+- Variable declarations (const, let, var)
+- Error handling (try/catch)
+- Module imports and exports
+- Comments (JSDoc, single-line, multi-line)
+
 ### Error Handling
 
 API routes use `try...catch` blocks to handle errors. When an error occurs, a JSON response with a `500` status code and an error message is returned.

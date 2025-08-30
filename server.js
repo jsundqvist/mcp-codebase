@@ -3,11 +3,6 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs/promises';
 
-// Tree-sitter imports
-import Parser from 'tree-sitter';
-import JavaScript from 'tree-sitter-javascript';
-import Java from 'tree-sitter-java';
-
 // Transformers.js imports
 import { pipeline } from '@xenova/transformers';
 
@@ -15,8 +10,11 @@ import { pipeline } from '@xenova/transformers';
 import * as lancedb from '@lancedb/lancedb';
 import { Field, FixedSizeList, Int32, Utf8, Float32, Schema } from 'apache-arrow';
 
-import { setParser, setEmbedder, setDb, setTable } from './src/globals.js';
+import { setEmbedder, setDb, setTable } from './src/globals.js';
 import { ingestProjectFiles } from './src/ingestion.js';
+import { createJavaScriptParser } from './src/parsers/javascript.js';
+import { createTypeScriptParser } from './src/parsers/typescript.js';
+import { createJavaParser } from './src/parsers/java.js';
 import ingestRoute from './src/routes/ingest.js';
 import queryRoute from './src/routes/query.js';
 import debugRoute from './src/routes/debug.js';
@@ -40,14 +38,7 @@ app.use(debugRoute);
 async function initialize() {
     console.log('Initializing MCP Server...');
 
-    // 1. Initialize Tree-sitter Parser
-    console.log('Loading Tree-sitter JavaScript and Java parsers...');
-    const parser = new Parser();
-    parser.setLanguage(JavaScript);
-    setParser(parser);
-    console.log('Tree-sitter parsers loaded.');
-
-    // 2. Initialize Transformers.js Embedder
+    // 1. Initialize Transformers.js Embedder
     console.log('Loading Transformers.js embedding model...');
     const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
     setEmbedder(embedder);
@@ -105,8 +96,17 @@ async function initialize() {
     setTable(table);
     console.log('LanceDB initialized.');
 
-    // 4. Ingest all project files on startup
-    await ingestProjectFiles(__dirname);
+    // 4. Ingest project files by language
+    console.log('Starting project file ingestion...');
+    
+    // JavaScript files
+    await ingestProjectFiles(__dirname, ['.js', '.jsx', '.mjs'], createJavaScriptParser());
+    
+    // TypeScript files
+    await ingestProjectFiles(__dirname, ['.ts', '.tsx'], createTypeScriptParser());
+    
+    // Java files - temporarily disabled until parser is fixed
+    // await ingestProjectFiles(__dirname, ['.java'], createJavaParser());
 
     console.log('MCP Server initialization complete.');
 }
