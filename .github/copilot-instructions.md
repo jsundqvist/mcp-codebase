@@ -64,3 +64,45 @@ When developing or modifying Tree-sitter parsers in this project, follow these p
 3. Consider common variations of the syntax
 4. Document pattern assumptions and limitations
 5. Group related patterns that are commonly used together
+
+#### Tree-sitter Query Syntax Guidelines
+
+##### Pattern Structure
+- Start with the most specific patterns first
+- Use explicit node types when possible (e.g., `method_definition`, `private_property_identifier`)
+- Pattern matching is exact - whitespace and structure must match precisely
+- Capture names use `@` prefix (e.g., `@name`, `@method_name`)
+
+##### Field Captures
+- Use `.` for field ordering when structure matters (e.g., `"static" . (private_property_identifier)`)
+- Field names can be used to specify properties (e.g., `property:`, `operator:`)
+- Multiple captures can reference the same node
+- Parent nodes can be captured alongside their children
+
+##### Supported Features
+- String literals in quotes (e.g., `"static"`, `"get"`)
+- Multiple alternatives in square brackets (e.g., `["get" "set"]`)
+- Repeated patterns with quantifiers (`*`, `+`, `?`)
+- Parent/child relationships with nesting
+- Field captures with explicit names
+
+##### Unsupported Features
+- No direct negation patterns (no `!pattern` or `NOT`)
+- No logical operators (AND, OR) in patterns
+- No back-references or forward-references
+- No regex-style pattern matching
+- No direct parent/sibling references
+
+##### Working with Limitations
+- Order patterns from most specific to least specific
+- Use separate captures instead of negations
+- Split complex patterns into multiple simpler ones
+- Use parent nodes to provide context
+- Rely on post-processing for complex filtering
+
+##### Testing Patterns
+- Test with minimal, focused examples
+- Include all variations you want to support
+- Verify capture names and node types
+- Check for unintended captures
+- Use exact text matching in assertions

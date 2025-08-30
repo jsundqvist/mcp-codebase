@@ -116,12 +116,31 @@ export const spreadPattern = `
 `;
 
 export const classFieldPattern = `
-    ; Class fields and private members
+    ; Public class fields
     (field_definition
         (property_identifier) @field_name) @field
 
+    ; Private identifiers in different contexts
+    (private_property_identifier) @private_name
+
+    ; Static fields
+    (field_definition
+        "static"
+        . (private_property_identifier)) @static_field
+
+    ; Static methods
     (method_definition
-        (private_property_identifier) @private_method) @private
+        "static"
+        . (private_property_identifier)) @static_method
+
+    ; Private accessors
+    (method_definition
+        "get"
+        . (private_property_identifier)) @getter_method
+
+    (method_definition
+        "set"
+        . (private_property_identifier)) @setter_method
 `;
 
 export const operatorPattern = `
