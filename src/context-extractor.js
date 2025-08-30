@@ -1,72 +1,12 @@
-// src/utils.js
-import { parser, embedder } from './globals.js';
-import Parser from 'tree-sitter';
-import JavaScript from 'tree-sitter-javascript';
+import { embedder } from './globals.js';
+import { getParserForFile } from './parsers/index.js';
 
 export async function extractCodeContext(code, filePath = 'untitled.js') {
-    const tree = parser.parse(code);
+    const languageParser = getParserForFile(filePath);
+    const tree = languageParser.parser.parse(code);
     const contexts = [];
     let idCounter = 0;
-
-    const query = new Parser.Query(JavaScript, `
-        ; Functions and Classes
-        (function_declaration 
-            name: (identifier) @name
-            body: (statement_block) @body) @function
-
-        (class_declaration 
-            name: (identifier) @name
-            body: (class_body) @body) @class
-
-        (method_definition
-            name: (property_identifier) @name) @method
-
-        ; Variables
-        (variable_declarator
-            name: (identifier) @name
-            value: (_) @value) @variable
-
-        ; Comments
-        (comment) @comment
-
-        ; Function Calls
-        (call_expression
-            function: (identifier) @called_function) @call
-
-        (call_expression
-            function: (member_expression 
-                object: (identifier) @object
-                property: (property_identifier) @property)) @method_call
-
-        ; Error Handling
-        (try_statement
-            handler: (catch_clause 
-                parameter: (identifier) @error_param)) @error_handling
-
-        ; Control Flow
-        (if_statement
-            condition: (_) @if_condition) @control_flow
-
-        ; Imports and Exports
-        (import_statement
-            source: (string) @import_source) @import
-
-        (named_imports
-            (import_specifier
-                name: (identifier) @import_name))
-
-        (import_clause
-            (identifier) @default_import)
-
-        (export_statement 
-            declaration: (function_declaration) @export_function) @export_func
-
-        (export_statement 
-            declaration: (class_declaration) @export_class) @export_class
-
-        (export_statement 
-            declaration: (variable_declaration) @export_variable) @export_var
-    `);
+    const query = languageParser.query;
 
     // First, collect all comments to associate them with nearby declarations
     const comments = [];
@@ -103,19 +43,17 @@ export async function extractCodeContext(code, filePath = 'untitled.js') {
         const nearbyComments = findNearbyComments(node);
         
         if (nameNode && bodyNode) {
-            // Include the entire declaration and any nearby comments
             snippetText = nearbyComments + '\n' + node.text;
-            type = nameNode.parent.type === 'function_declaration' ? 'function' : 'class';
+            type = nameNode.parent.type.replace('_declaration', '');
             startLine = node.startPosition.row;
             endLine = node.endPosition.row;
-            identifier = nameNode.text;
+            identifier = languageParser.getNodeName(node);
         } else if (nameNode && valueNode) {
-            // Include variable declaration and any nearby comments
             snippetText = nearbyComments + '\n' + node.text;
             type = 'variable';
             startLine = node.startPosition.row;
             endLine = node.endPosition.row;
-            identifier = nameNode.text;
+            identifier = languageParser.getNodeName(node);
         } else {
             continue;
         }
@@ -128,9 +66,9 @@ export async function extractCodeContext(code, filePath = 'untitled.js') {
         function findParentContext(node) {
             let parent = node.parent;
             while (parent) {
-                if (parent.type === 'function_declaration' || 
-                    parent.type === 'class_declaration' ||
-                    parent.type === 'method_definition') {
+                if (parent.type.includes('function') || 
+                    parent.type.includes('class') ||
+                    parent.type.includes('method')) {
                     return parent;
                 }
                 parent = parent.parent;
@@ -173,10 +111,9 @@ export async function extractCodeContext(code, filePath = 'untitled.js') {
 
             // Add function call context
             if (functionCalls.size > 0) {
-                const callContext = `Function ${identifier} calls: ${Array.from(functionCalls).join(', ')}`;
                 contexts.push({
                     id: `${filePath}::${identifier}_calls::${idCounter++}`,
-                    text: callContext,
+                    text: `Function ${identifier} calls: ${Array.from(functionCalls).join(', ')}`,
                     path: filePath,
                     start_line: startLine,
                     end_line: endLine,
@@ -186,10 +123,9 @@ export async function extractCodeContext(code, filePath = 'untitled.js') {
 
             // Add control flow context
             if (controlFlow.size > 0) {
-                const flowContext = `Function ${identifier} control flow: ${Array.from(controlFlow).join('; ')}`;
                 contexts.push({
                     id: `${filePath}::${identifier}_flow::${idCounter++}`,
-                    text: flowContext,
+                    text: `Function ${identifier} control flow: ${Array.from(controlFlow).join('; ')}`,
                     path: filePath,
                     start_line: startLine,
                     end_line: endLine,
@@ -199,10 +135,9 @@ export async function extractCodeContext(code, filePath = 'untitled.js') {
 
             // Add error handling context
             if (errorHandling.size > 0) {
-                const errorContext = `Function ${identifier} error handling: ${Array.from(errorHandling).join('; ')}`;
                 contexts.push({
                     id: `${filePath}::${identifier}_errors::${idCounter++}`,
-                    text: errorContext,
+                    text: `Function ${identifier} error handling: ${Array.from(errorHandling).join('; ')}`,
                     path: filePath,
                     start_line: startLine,
                     end_line: endLine,
@@ -212,11 +147,10 @@ export async function extractCodeContext(code, filePath = 'untitled.js') {
 
             // Add hierarchical context
             if (parent) {
-                const parentName = parent.childForFieldName('name')?.text || 'anonymous';
-                const hierarchyContext = `${type} ${identifier} is defined in ${parent.type.replace('_', ' ')} ${parentName}`;
+                const parentName = languageParser.getNodeName(parent);
                 contexts.push({
                     id: `${filePath}::${identifier}_hierarchy::${idCounter++}`,
-                    text: hierarchyContext,
+                    text: `${type} ${identifier} is defined in ${parent.type.replace('_', ' ')} ${parentName}`,
                     path: filePath,
                     start_line: startLine,
                     end_line: endLine,
@@ -245,25 +179,21 @@ export async function extractCodeContext(code, filePath = 'untitled.js') {
                 }
 
                 // Track exports
-                const exportFunction = match.captures.find(c => c.name === 'export_function')?.node;
-                const exportClass = match.captures.find(c => c.name === 'export_class')?.node;
-                const exportVariable = match.captures.find(c => c.name === 'export_variable')?.node;
-
-                if (exportFunction || exportClass || exportVariable) {
-                    const exportNode = exportFunction || exportClass || exportVariable;
-                    const exportName = exportNode.childForFieldName('name')?.text;
-                    if (exportName) {
-                        exports.add(`exports ${exportNode.type.split('_')[0]} ${exportName}`);
+                for (const capture of match.captures) {
+                    if (capture.name.startsWith('export_') && languageParser.isExportable(capture.node)) {
+                        const exportName = languageParser.getNodeName(capture.node);
+                        if (exportName) {
+                            exports.add(`exports ${capture.node.type.split('_')[0]} ${exportName}`);
+                        }
                     }
                 }
             }
 
             // Add import context
             if (imports.size > 0) {
-                const importContext = `Module ${filePath} imports: ${Array.from(imports).join(', ')}`;
                 contexts.push({
                     id: `${filePath}::imports::${idCounter++}`,
-                    text: importContext,
+                    text: `Module ${filePath} imports: ${Array.from(imports).join(', ')}`,
                     path: filePath,
                     start_line: 0,
                     end_line: 0,
@@ -273,10 +203,9 @@ export async function extractCodeContext(code, filePath = 'untitled.js') {
 
             // Add export context
             if (exports.size > 0) {
-                const exportContext = `Module ${filePath} ${Array.from(exports).join(', ')}`;
                 contexts.push({
                     id: `${filePath}::exports::${idCounter++}`,
-                    text: exportContext,
+                    text: `Module ${filePath} ${Array.from(exports).join(', ')}`,
                     path: filePath,
                     start_line: 0,
                     end_line: 0,
