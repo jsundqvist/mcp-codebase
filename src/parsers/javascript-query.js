@@ -106,6 +106,37 @@ export const templatePattern = `
         (identifier) @template_var) @template_expr
 `;
 
+export const spreadPattern = `
+    ; Rest/Spread operators
+    (rest_pattern
+        (identifier) @rest_param) @rest
+
+    (spread_element
+        (identifier) @spread_var) @spread
+`;
+
+export const classFieldPattern = `
+    ; Class fields and private members
+    (field_definition
+        (property_identifier) @field_name) @field
+
+    (method_definition
+        (private_property_identifier) @private_method) @private
+`;
+
+export const operatorPattern = `
+    ; Basic member access and binary expressions
+    (member_expression) @member
+    (binary_expression) @binary
+`;
+
+export const optionalPattern = `
+    ; Optional chaining and nullish coalescing
+    (optional_chain) @optional_chain
+    (binary_expression 
+        operator: "??") @nullish_coalesce
+`;
+
 // The full query combines all patterns
 export const jsQuery = [
     functionPattern,
@@ -118,5 +149,9 @@ export const jsQuery = [
     objectPattern,
     destructurePattern,
     asyncPattern,
-    templatePattern
+    templatePattern,
+    spreadPattern,
+    classFieldPattern,
+    operatorPattern,
+    optionalPattern
 ].join('\n');

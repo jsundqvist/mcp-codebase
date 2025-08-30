@@ -91,6 +91,131 @@ const withBlock = (value) => {
         });
     });
 
+    describe('Member Access and Operators', () => {
+        it('captures basic member access and binary expressions', () => {
+            const code = `
+const obj = {
+    x: 1,
+    y: 2
+};
+const value = obj.x;
+const sum = a + b;
+const product = x * y;`;
+            const captures = parseAndQuery(code);
+            expect(captures).toBeTruthy();
+            
+            // Check member expressions
+            const memberAccess = captures.filter(c => c.name === 'member');
+            expect(memberAccess.length).toBe(1);  // obj.x
+            
+            // Check binary expressions
+            const binaryOps = captures.filter(c => c.name === 'binary');
+            expect(binaryOps.length).toBe(2);  // + and * operations
+        });
+
+        it('captures optional chaining and nullish coalescing expressions', () => {
+            const code = `
+// Basic optional chaining
+const name = user?.profile?.name;
+const items = response?.data?.items;
+
+// Nullish coalescing
+const value = data?.value ?? defaultValue;
+const config = settings?.timeout ?? 5000;
+
+// Complex nested optional chaining
+const nested = obj?.foo?.bar?.baz?.qux;
+const method = instance?.compute?.()?.result;
+
+// Multiple nullish coalescing
+const fallback = value ?? backup ?? default ?? null;
+
+// Combined optional chaining and nullish coalescing
+const complex = user?.settings?.theme?.color ?? defaultTheme?.color ?? '#000000';`;
+            const captures = parseAndQuery(code);
+            expect(captures).toBeTruthy();
+            
+            // Check optional chain expressions
+            const optionalChains = captures.filter(c => c.name === 'optional_chain');
+            expect(optionalChains.length).toBe(17);  // All ?. operators
+            
+            // Check nullish coalescing expressions
+            const nullishCoalesce = captures.filter(c => c.name === 'nullish_coalesce');
+            expect(nullishCoalesce.length).toBe(7);  // All ?? operators
+
+            // Add array access case
+const code2 = `
+const item = array?.[0]?.name;
+const element = list?.[index]?.value;`;
+            const arrayCaptures = parseAndQuery(code2);
+            const arrayOptionalChains = arrayCaptures.filter(c => c.name === 'optional_chain');
+            expect(arrayOptionalChains.length).toBe(4);  // array?.[0], [0]?.name, list?.[index], [index]?.value
+
+            // Verify specific pattern types exist
+            const hasMethodChain = optionalChains.some(c => 
+                c.node.text?.includes('compute') || 
+                c.node.parent?.text?.includes('compute?.'));
+            expect(hasMethodChain).toBe(true, 'Should find optional chaining with compute method');
+
+            // Verify multiple nullish coalescing
+            const hasMultipleNullish = nullishCoalesce.some(c => 
+                c.node.text?.includes('??') && 
+                (c.node.parent?.text?.includes('backup') || c.node.text?.includes('backup')));
+            expect(hasMultipleNullish).toBe(true, 'Should find nullish coalescing with backup value');
+        });
+    });
+
+    describe('Class Fields', () => {
+        it('captures class fields and private members', () => {
+            const code = `
+class Example {
+    name = "test";
+    #private = 123;
+    static count = 0;
+    
+    #privateMethod() {
+        return this.#private;
+    }
+}`;
+            const captures = parseAndQuery(code);
+            expect(captures).toBeTruthy();
+            
+            // Check public fields
+            const fields = captures.filter(c => c.name === 'field_name');
+            expect(fields.length).toBe(2);  // name and count
+            expect(fields.map(c => c.node.text)).toContain('name');
+            expect(fields.map(c => c.node.text)).toContain('count');
+            
+            // Check private methods
+            const privateMethods = captures.filter(c => c.name === 'private_method');
+            expect(privateMethods.length).toBe(1);
+            expect(privateMethods[0].node.text).toBe('#privateMethod');
+        });
+    });
+
+    describe('Rest and Spread', () => {
+        it('captures rest parameters and spread elements', () => {
+            const code = `
+function sum(...numbers) {
+    return numbers.reduce((a, b) => a + b, 0);
+}
+const array = [1, 2, 3];
+const combined = [...array, 4, 5];`;
+            const captures = parseAndQuery(code);
+            expect(captures).toBeTruthy();
+            
+            // Check rest parameter
+            const restParams = captures.filter(c => c.name === 'rest_param');
+            expect(restParams.length).toBe(1);
+            expect(restParams[0].node.text).toBe('numbers');
+            
+            // Check spread element
+            const spreadVars = captures.filter(c => c.name === 'spread_var');
+            expect(spreadVars.length).toBe(1);
+            expect(spreadVars[0].node.text).toBe('array');
+        });
+    });
+
     describe('Template Literals', () => {
         it('captures template strings and expressions', () => {
             const code = `
