@@ -573,8 +573,8 @@ async function loadData() {
 
             // Verify top-level await expressions
             const topLevelAwaits = captures.filter(c => c.name === 'top_level_await');
-            expect(topLevelAwaits.length).toBe(4);  // db, cache, Promise.all, data
-            
+            expect(topLevelAwaits.length).toBe(5);  // db, cache, Promise.all, data, api
+
             // Each should be under a proper declaration or statement
             topLevelAwaits.forEach(c => {
                 const parent = c.node.parent?.parent?.type;
@@ -584,10 +584,20 @@ async function loadData() {
                     parent === 'expression_statement'
                 ).toBe(true);
             });
-            
-            // Should not capture awaits inside functions
+
+            // All awaits should be in the program scope (not inside functions)
             const awaitTexts = topLevelAwaits.map(c => c.node.text);
-            expect(awaitTexts.some(t => t.includes('fetchData'))).toBe(false);
+            expect(awaitTexts).not.toContain('await fetchData()');
+            expect(awaitTexts).not.toContain('await import(\'./internal.js\')');
+            
+            // Should include all top-level awaits from the code
+            expect(awaitTexts).toEqual(expect.arrayContaining([
+                'await initDatabase()',
+                'await setupCache()',
+                'await Promise.all',
+                'await import(\'./data.json\')',
+                'await import(\'./api.js\')'
+            ]));
         });
 
         it('captures different types of exports', () => {

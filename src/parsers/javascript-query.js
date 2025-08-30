@@ -94,7 +94,7 @@ export const modulePattern = `
             (string) @dynamic_source)) @dynamic_import
         (#eq? @import_function "import"))
 
-    ; Top-level await - in variable declarations
+    ; Top-level await in variable declarations
     (variable_declarator
         value: (await_expression) @top_level_await)
 
