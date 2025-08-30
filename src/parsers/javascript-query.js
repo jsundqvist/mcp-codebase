@@ -95,8 +95,10 @@ export const modulePattern = `
         (#eq? @import_function "import"))
 
     ; Top-level await in variable declarations
-    (variable_declarator
-        value: (await_expression) @top_level_await)
+    (program 
+        (lexical_declaration
+            (variable_declarator
+                value: (await_expression) @top_level_await)))
 
     ; Function exports
     (export_statement

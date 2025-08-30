@@ -551,13 +551,11 @@ const { default: DefaultComponent, utils } = await import('./module');`;
 const db = await initDatabase();
 const cache = await setupCache();
 
-// Multiple awaits in sequence
+            // Multiple awaits in sequence
 const [users, products] = await Promise.all([
-    fetchUsers(),
-    fetchProducts()
-]);
-
-// Top-level await with dynamic import
+    Promise.resolve(123),
+    Promise.resolve(456)
+]);// Top-level await with dynamic import
 const { data } = await import('./data.json');
 const api = await import('./api.js');
 
@@ -573,6 +571,11 @@ async function loadData() {
 
             // Verify top-level await expressions
             const topLevelAwaits = captures.filter(c => c.name === 'top_level_await');
+            console.log('Found await expressions:', topLevelAwaits.map(c => ({
+                text: c.node.text,
+                parent: c.node.parent?.type,
+                grandparent: c.node.parent?.parent?.type
+            })));
             expect(topLevelAwaits.length).toBe(5);  // db, cache, Promise.all, data, api
 
             // Each should be under a proper declaration or statement
@@ -585,16 +588,11 @@ async function loadData() {
                 ).toBe(true);
             });
 
-            // All awaits should be in the program scope (not inside functions)
-            const awaitTexts = topLevelAwaits.map(c => c.node.text);
-            expect(awaitTexts).not.toContain('await fetchData()');
-            expect(awaitTexts).not.toContain('await import(\'./internal.js\')');
-            
-            // Should include all top-level awaits from the code
-            expect(awaitTexts).toEqual(expect.arrayContaining([
+            // Should include all actual top-level awaits from the code
+            expect(new Set(topLevelAwaits.map(c => c.node.text))).toEqual(new Set([
                 'await initDatabase()',
                 'await setupCache()',
-                'await Promise.all',
+                'await Promise.all([\n    Promise.resolve(123),\n    Promise.resolve(456)\n])',
                 'await import(\'./data.json\')',
                 'await import(\'./api.js\')'
             ]));
