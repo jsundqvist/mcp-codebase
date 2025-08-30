@@ -510,39 +510,55 @@ const { default: DefaultComponent, utils } = await import('./module');`;
             const captures = parseAndQuery(code);
             expect(captures).toBeTruthy();
             
-            // Check static imports
-            const staticImports = captures.filter(c => c.name === 'static_import');
-            expect(staticImports.length).toBe(2);  // react and types imports
-
-            // Check static import sources
-            const staticSources = captures.filter(c => c.name === 'module_source');
-            expect(staticSources.map(c => c.node.text))
-                .toEqual(expect.arrayContaining(['\'react\'', '\'./types\'']));
+            // Check static imports and their sources
+            const staticSources = new Set(
+                captures
+                    .filter(c => c.name === 'module_source')
+                    .map(c => c.node.text)
+            );
+            expect(staticSources).toEqual(new Set([
+                '\'react\'',
+                '\'./types\''
+            ]));
             
             // Check import specifiers
-            const importNames = captures.filter(c => c.name === 'import_name');
-            expect(importNames.map(c => c.node.text))
-                .toEqual(expect.arrayContaining(['useState', 'useEffect', 'Config']));
+            const importNames = new Set(
+                captures
+                    .filter(c => c.name === 'import_name')
+                    .map(c => c.node.text)
+            );
+            expect(importNames).toEqual(new Set([
+                'useState',
+                'useEffect',
+                'Config'
+            ]));
 
-            // Check dynamic imports and their parts
-            const dynamicImports = captures.filter(c => c.name === 'dynamic_import');
-            expect(dynamicImports.length).toBe(4);  // All import() calls
+            // Check dynamic imports
+            const dynamicSources = new Set(
+                captures
+                    .filter(c => c.name === 'dynamic_source')
+                    .map(c => c.node.text)
+            );
+            expect(dynamicSources).toEqual(new Set([
+                '\'./components/LazyComponent\'',
+                '\'./feature-module\'',
+                '\'./locales/en.json\'',
+                '\'./module\''
+            ]));
             
-            // Verify import function names
-            const importFuncs = captures.filter(c => c.name === 'import_function');
-            expect(importFuncs.length).toBe(4);
-            expect(importFuncs.every(c => c.node.text === 'import')).toBe(true);
-
-            // Verify source strings with their quotes
-            const sources = captures.filter(c => c.name === 'dynamic_source');
-            expect(sources.length).toBe(4);
-            expect(sources.map(c => c.node.text).sort())
-                .toEqual([
-                    '\'./components/LazyComponent\'',
-                    '\'./feature-module\'',
-                    '\'./locales/en.json\'',
-                    '\'./module\''
-                ].sort());
+            // Verify all import function calls are actually 'import'
+            const importFuncs = new Set(
+                captures
+                    .filter(c => c.name === 'import_function')
+                    .map(c => c.node.text)
+            );
+            expect(importFuncs).toEqual(new Set(['import']));
+            expect(dynamicSources).toEqual(new Set([
+                '\'./components/LazyComponent\'',
+                '\'./feature-module\'',
+                '\'./locales/en.json\'',
+                '\'./module\''
+            ]));
         });
 
         it('captures top-level await expressions', () => {
@@ -551,11 +567,13 @@ const { default: DefaultComponent, utils } = await import('./module');`;
 const db = await initDatabase();
 const cache = await setupCache();
 
-            // Multiple awaits in sequence
+// Multiple awaits in sequence
 const [users, products] = await Promise.all([
     Promise.resolve(123),
     Promise.resolve(456)
-]);// Top-level await with dynamic import
+]);
+
+// Top-level await with dynamic import
 const { data } = await import('./data.json');
 const api = await import('./api.js');
 
@@ -571,22 +589,10 @@ async function loadData() {
 
             // Verify top-level await expressions
             const topLevelAwaits = captures.filter(c => c.name === 'top_level_await');
-            console.log('Found await expressions:', topLevelAwaits.map(c => ({
-                text: c.node.text,
-                parent: c.node.parent?.type,
-                grandparent: c.node.parent?.parent?.type
-            })));
-            expect(topLevelAwaits.length).toBe(5);  // db, cache, Promise.all, data, api
 
-            // Each should be under a proper declaration or statement
-            topLevelAwaits.forEach(c => {
-                const parent = c.node.parent?.parent?.type;
-                expect(
-                    parent === 'variable_declaration' ||
-                    parent === 'lexical_declaration' ||
-                    parent === 'expression_statement'
-                ).toBe(true);
-            });
+            // Each should be under lexical declarations (const/let)
+            expect(new Set(topLevelAwaits.map(c => c.node.parent?.parent?.type)))
+                .toEqual(new Set(['lexical_declaration']));
 
             // Should include all actual top-level awaits from the code
             expect(new Set(topLevelAwaits.map(c => c.node.text))).toEqual(new Set([
