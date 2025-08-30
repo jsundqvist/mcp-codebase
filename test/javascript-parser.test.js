@@ -113,6 +113,51 @@ const product = x * y;`;
             expect(binaryOps.length).toBe(2);  // + and * operations
         });
 
+        it('captures logical assignment operators', () => {
+            const code = `
+// Nullish coalescing assignment
+let settings = {};
+settings.timeout ??= 5000;  // Set if undefined/null
+settings.retries ??= 3;     // Set if undefined/null
+
+// Logical AND assignment
+let config = { debug: true };
+config.verbose &&= isDevMode;  // Set only if config.verbose is truthy
+permissions.write &&= userHasAccess;  // Set only if permissions.write is truthy
+
+// Logical OR assignment
+let headers = {};
+headers.contentType ||= 'application/json';  // Set if falsy
+cache.maxSize ||= 1000;  // Set if falsy`;
+            const captures = parseAndQuery(code);
+            expect(captures).toBeTruthy();
+
+            // Check logical assignments
+            const logicalOps = captures.filter(c => c.name === 'logical_operator');
+            expect(logicalOps.length).toBe(6);  // 2 of each operator type
+
+            // Group by operator type
+            const operators = logicalOps.map(c => c.node.text);
+            const nullishAssigns = operators.filter(op => op === '??=');
+            const andAssigns = operators.filter(op => op === '&&=');
+            const orAssigns = operators.filter(op => op === '||=');
+
+            // Check counts of each type
+            expect(nullishAssigns.length).toBe(2);  // timeout and retries
+            expect(andAssigns.length).toBe(2);      // verbose and write
+            expect(orAssigns.length).toBe(2);       // contentType and maxSize
+
+            // Check full assignments
+            const assignments = captures.filter(c => c.name === 'logical_assignment');
+            expect(assignments.length).toBe(6);  // All logical assignments
+            
+            // Verify we captured some specific assignments
+            const assignmentTexts = assignments.map(c => c.node.text);
+            expect(assignmentTexts.some(t => t.includes('settings.timeout ??= 5000'))).toBe(true);
+            expect(assignmentTexts.some(t => t.includes('config.verbose &&= isDevMode'))).toBe(true);
+            expect(assignmentTexts.some(t => t.includes('headers.contentType ||= '))).toBe(true);
+        });
+
         it('captures optional chaining and nullish coalescing expressions', () => {
             const code = `
 // Basic optional chaining
@@ -444,26 +489,105 @@ object.method(arg);`;
     });
 
     describe('Modules', () => {
-        it('captures named imports', () => {
-            const code = `import { useState } from 'react';`;
+        it('captures static and dynamic imports', () => {
+            const code = `
+// Static imports
+import { useState, useEffect } from 'react';
+import type { Config } from './types';
+
+// Dynamic imports
+const Component = await import('./components/LazyComponent');
+const localeData = await import('./locales/en.json');
+
+// Conditional dynamic imports
+if (feature.enabled) {
+    const module = await import('./feature-module');
+}
+
+// Dynamic imports with destructuring
+const { default: DefaultComponent, utils } = await import('./module');`;
+
             const captures = parseAndQuery(code);
             expect(captures).toBeTruthy();
             
-            // Check import statement and source
-            const importCapture = captures.find(c => c.name === 'import');
-            expect(importCapture).toBeTruthy();
+            // Check static imports
+            const staticImports = captures.filter(c => c.name === 'static_import');
+            expect(staticImports.length).toBe(2);  // react and types imports
+
+            // Check static import sources
+            const staticSources = captures.filter(c => c.name === 'module_source');
+            expect(staticSources.map(c => c.node.text))
+                .toEqual(expect.arrayContaining(['\'react\'', '\'./types\'']));
             
-            const sourceCapture = captures.find(c => c.name === 'module_source');
-            expect(sourceCapture).toBeTruthy();
-            expect(sourceCapture.node.text).toBe('\'react\'');
+            // Check import specifiers
+            const importNames = captures.filter(c => c.name === 'import_name');
+            expect(importNames.map(c => c.node.text))
+                .toEqual(expect.arrayContaining(['useState', 'useEffect', 'Config']));
+
+            // Check dynamic imports and their parts
+            const dynamicImports = captures.filter(c => c.name === 'dynamic_import');
+            expect(dynamicImports.length).toBe(4);  // All import() calls
             
-            // Check import specifier
-            const specifierCapture = captures.find(c => c.name === 'import_spec');
-            expect(specifierCapture).toBeTruthy();
+            // Verify import function names
+            const importFuncs = captures.filter(c => c.name === 'import_function');
+            expect(importFuncs.length).toBe(4);
+            expect(importFuncs.every(c => c.node.text === 'import')).toBe(true);
+
+            // Verify source strings with their quotes
+            const sources = captures.filter(c => c.name === 'dynamic_source');
+            expect(sources.length).toBe(4);
+            expect(sources.map(c => c.node.text).sort())
+                .toEqual([
+                    '\'./components/LazyComponent\'',
+                    '\'./feature-module\'',
+                    '\'./locales/en.json\'',
+                    '\'./module\''
+                ].sort());
+        });
+
+        it('captures top-level await expressions', () => {
+            const code = `
+// Top-level await expressions
+const db = await initDatabase();
+const cache = await setupCache();
+
+// Multiple awaits in sequence
+const [users, products] = await Promise.all([
+    fetchUsers(),
+    fetchProducts()
+]);
+
+// Top-level await with dynamic import
+const { data } = await import('./data.json');
+const api = await import('./api.js');
+
+// Not a top-level await (inside function)
+async function loadData() {
+    const result = await fetchData();
+    const mod = await import('./internal.js');
+    return { result, mod };
+}`;
+
+            const captures = parseAndQuery(code);
+            expect(captures).toBeTruthy();
+
+            // Verify top-level await expressions
+            const topLevelAwaits = captures.filter(c => c.name === 'top_level_await');
+            expect(topLevelAwaits.length).toBe(4);  // db, cache, Promise.all, data
             
-            const nameCapture = captures.find(c => c.name === 'import_name');
-            expect(nameCapture).toBeTruthy();
-            expect(nameCapture.node.text).toBe('useState');
+            // Each should be under a proper declaration or statement
+            topLevelAwaits.forEach(c => {
+                const parent = c.node.parent?.parent?.type;
+                expect(
+                    parent === 'variable_declaration' ||
+                    parent === 'lexical_declaration' ||
+                    parent === 'expression_statement'
+                ).toBe(true);
+            });
+            
+            // Should not capture awaits inside functions
+            const awaitTexts = topLevelAwaits.map(c => c.node.text);
+            expect(awaitTexts.some(t => t.includes('fetchData'))).toBe(false);
         });
 
         it('captures different types of exports', () => {

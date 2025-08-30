@@ -43,13 +43,22 @@ export const errorHandlingPattern = `
 `;
 
 export const modulePattern = `
-    ; Imports
+    ; Static imports
     (import_statement
-        source: (string) @module_source) @import
-
-    ; Import specifiers
+        source: (string) @module_source) @static_import
     (import_specifier
-        name: (identifier) @import_name) @import_spec
+        name: (identifier) @import_name)
+
+    ; Dynamic imports - match the import() calls
+    (await_expression
+        (call_expression
+            function: (identifier) @import_function
+            arguments: (arguments
+                (string) @dynamic_source))) @dynamic_import
+
+    ; Top-level await - only in variable declarations
+    (variable_declarator
+        value: (await_expression)) @top_level_await
 
     ; Function exports
     (export_statement
@@ -65,6 +74,10 @@ export const modulePattern = `
             (lexical_declaration) @export_decl
             (variable_declaration) @export_decl
         ]) @export_var
+
+    ; Re-exports
+    (export_statement
+        source: (string) @re_export_source) @re_export
 `;
 
 export const arrowFunctionPattern = `
@@ -149,6 +162,16 @@ export const operatorPattern = `
     (binary_expression) @binary
 `;
 
+export const logicalAssignmentPattern = `
+    ; Logical assignment operators
+    (augmented_assignment_expression
+        operator: [
+            "??="  ; Nullish coalescing assignment
+            "&&="  ; Logical AND assignment
+            "||="  ; Logical OR assignment
+        ] @logical_operator) @logical_assignment
+`;
+
 export const optionalPattern = `
     ; Optional chaining and nullish coalescing
     (optional_chain) @optional_chain
@@ -172,5 +195,6 @@ export const jsQuery = [
     spreadPattern,
     classFieldPattern,
     operatorPattern,
-    optionalPattern
+    optionalPattern,
+    logicalAssignmentPattern
 ].join('\n');
