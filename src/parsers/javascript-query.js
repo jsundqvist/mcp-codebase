@@ -49,16 +49,16 @@ export const modulePattern = `
     (import_specifier
         name: (identifier) @import_name)
 
-    ; Dynamic imports - match the import() calls
-    (await_expression
-        (call_expression
-            function: (identifier) @import_function
-            arguments: (arguments
-                (string) @dynamic_source))) @dynamic_import
+    ; Dynamic imports
+    ((call_expression
+        function: (_) @import_function
+        arguments: (arguments 
+            (string) @dynamic_source)) @dynamic_import
+        (#eq? @import_function "import"))
 
-    ; Top-level await - only in variable declarations
+    ; Top-level await - in variable declarations
     (variable_declarator
-        value: (await_expression)) @top_level_await
+        value: (await_expression) @top_level_await)
 
     ; Function exports
     (export_statement
