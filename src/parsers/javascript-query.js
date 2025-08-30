@@ -67,6 +67,45 @@ export const modulePattern = `
         ]) @export_var
 `;
 
+export const arrowFunctionPattern = `
+    ; Arrow Functions
+    (arrow_function 
+        parameters: (formal_parameters 
+            (identifier) @param_name)? 
+        body: (_)) @arrow_function
+`;
+
+export const objectPattern = `
+    ; Object properties and methods
+    (pair
+        key: (property_identifier) @prop_name) @object_prop
+
+    (method_definition
+        name: (property_identifier) @method_name) @object_method
+`;
+
+export const destructurePattern = `
+    ; Destructuring patterns
+    (object_pattern) @obj_destruct
+    (array_pattern) @array_destruct
+`;
+
+export const asyncPattern = `
+    ; Async/Await patterns
+    (function_declaration
+        ["async"] @async_keyword
+        name: (identifier) @async_name) @async_function
+
+    (await_expression) @await_expr
+`;
+
+export const templatePattern = `
+    ; Template literals
+    (template_string) @template
+    (template_substitution
+        (identifier) @template_var) @template_expr
+`;
+
 // The full query combines all patterns
 export const jsQuery = [
     functionPattern,
@@ -74,5 +113,10 @@ export const jsQuery = [
     variablePattern,
     callPattern,
     errorHandlingPattern,
-    modulePattern
+    modulePattern,
+    arrowFunctionPattern,
+    objectPattern,
+    destructurePattern,
+    asyncPattern,
+    templatePattern
 ].join('\n');

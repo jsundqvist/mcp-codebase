@@ -9,6 +9,26 @@ describe('JavaScript Parser Tests', () => {
     }
 
     describe('Functions', () => {
+        it('captures arrow functions', () => {
+            const code = `
+const simple = () => {};
+const withParam = (x) => x * 2;
+const withBlock = (value) => {
+    return value * 2;
+};`;
+            const captures = parseAndQuery(code);
+            expect(captures).toBeTruthy();
+            
+            // Check arrow function captures
+            const arrowCaptures = captures.filter(c => c.name === 'arrow_function');
+            expect(arrowCaptures.length).toBe(3);
+            
+            // Check parameter captures
+            const paramCaptures = captures.filter(c => c.name === 'param_name');
+            expect(paramCaptures.length).toBe(2);
+            expect(paramCaptures.map(c => c.node.text)).toEqual(['x', 'value']);
+        });
+
         it('captures function declaration', () => {
             const code = `function add(a, b) {
     return a + b;
@@ -68,6 +88,102 @@ describe('JavaScript Parser Tests', () => {
             const nameCapture = captures.find(c => c.name === 'method_name');
             expect(nameCapture).toBeTruthy();
             expect(nameCapture.node.text).toBe('add');
+        });
+    });
+
+    describe('Template Literals', () => {
+        it('captures template strings and expressions', () => {
+            const code = `
+const name = "world";
+const greeting = \`Hello \${name}!\`;
+const multiline = \`
+    line 1
+    \${value}
+    line 2
+\`;`;
+            const captures = parseAndQuery(code);
+            expect(captures).toBeTruthy();
+            
+            // Check template strings
+            const templates = captures.filter(c => c.name === 'template');
+            expect(templates.length).toBe(2);
+            
+            // Check template expressions
+            const expressions = captures.filter(c => c.name === 'template_expr');
+            expect(expressions.length).toBe(2);
+            
+            // Check template variables
+            const vars = captures.filter(c => c.name === 'template_var');
+            expect(vars.length).toBe(2);
+            expect(vars.map(c => c.node.text)).toEqual(['name', 'value']);
+        });
+    });
+
+    describe('Async/Await', () => {
+        it('captures async functions and await expressions', () => {
+            const code = `
+async function fetchData() {
+    const result = await fetch('/api');
+    return result;
+}`;
+            const captures = parseAndQuery(code);
+            expect(captures).toBeTruthy();
+            
+            // Check async function
+            const asyncFuncs = captures.filter(c => c.name === 'async_function');
+            expect(asyncFuncs.length).toBe(1);
+            
+            const asyncNames = captures.filter(c => c.name === 'async_name');
+            expect(asyncNames.length).toBe(1);
+            expect(asyncNames[0].node.text).toBe('fetchData');
+            
+            // Check await expression
+            const awaits = captures.filter(c => c.name === 'await_expr');
+            expect(awaits.length).toBe(1);
+        });
+    });
+
+    describe('Destructuring', () => {
+        it('captures object and array destructuring', () => {
+            const code = `
+const { x, y } = point;
+const [first, second] = array;`;
+            const captures = parseAndQuery(code);
+            expect(captures).toBeTruthy();
+            
+            // Check object and array destructuring patterns exist
+            const objDestructures = captures.filter(c => c.name === 'obj_destruct');
+            expect(objDestructures.length).toBe(1);
+            expect(objDestructures[0].node.type).toBe('object_pattern');
+            
+            const arrayDestructures = captures.filter(c => c.name === 'array_destruct');
+            expect(arrayDestructures.length).toBe(1);
+            expect(arrayDestructures[0].node.type).toBe('array_pattern');
+        });
+    });
+
+    describe('Objects', () => {
+        it('captures object properties and methods', () => {
+            const code = `
+const obj = {
+    name: "test",
+    value: 42,
+    method() {
+        return this.value;
+    }
+};`;
+            const captures = parseAndQuery(code);
+            expect(captures).toBeTruthy();
+            
+            // Check property captures
+            const propCaptures = captures.filter(c => c.name === 'prop_name');
+            expect(propCaptures.length).toBe(2); // name and value
+            expect(propCaptures.map(c => c.node.text)).toEqual(['name', 'value']);
+            
+            // Check method capture
+            const methodCapture = captures.find(c => c.name === 'method_name');
+            expect(methodCapture).toBeTruthy();
+            expect(methodCapture.node.text).toBe('method');
         });
     });
 
