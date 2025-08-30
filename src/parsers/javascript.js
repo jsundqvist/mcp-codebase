@@ -1,13 +1,13 @@
 import Parser from 'tree-sitter';
 import JavaScript from 'tree-sitter-javascript';
-import { jsQuery } from './javascript-query.js';
+import * as patterns from './javascript-query.js';
 
-export function createJavaScriptParser() {
+export function createJavaScriptParser(pattern = patterns.jsQuery) {
     const parser = new Parser();
     parser.setLanguage(JavaScript);
     return {
         language: 'javascript',
-        query: new Parser.Query(JavaScript, jsQuery),
+        query: new Parser.Query(JavaScript, pattern),
         parser,
         getNodeName: (node) => node.childForFieldName('name')?.text || 'anonymous',
         isExportable: (node) => ['function_declaration', 'class_declaration', 'variable_declaration'].includes(node.type)

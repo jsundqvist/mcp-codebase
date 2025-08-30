@@ -1,0 +1,96 @@
+import { createTypeScriptParser } from '../src/parsers/typescript.js';
+import Parser from 'tree-sitter';
+
+describe('TypeScript Parser Tests', () => {
+    let parser;
+    let query;
+
+    beforeAll(() => {
+        const tsParser = createTypeScriptParser();
+        parser = tsParser.parser;
+        query = tsParser.query;
+    });
+
+    const parseAndQuery = (code) => {
+        const tree = parser.parse(code);
+        const matches = query.matches(tree.rootNode);
+        return matches;
+    };
+
+    describe('Interface Declarations', () => {
+        test('captures basic interface', () => {
+            const code = `
+                interface User {
+                    name: string;
+                    age: number;
+                }
+            `;
+            const matches = parseAndQuery(code);
+            
+            // Find interface capture
+            const interfaceMatch = matches.find(m => m.pattern === 'interface');
+            expect(interfaceMatch).toBeTruthy();
+            expect(interfaceMatch.captures.find(c => c.name === 'name').node.text).toBe('User');
+        });
+
+        test('captures interface with type parameters', () => {
+            const code = `
+                interface Container<T> {
+                    value: T;
+                }
+            `;
+            const matches = parseAndQuery(code);
+            const interfaceMatch = matches.find(m => m.pattern === 'interface');
+            expect(interfaceMatch).toBeTruthy();
+            expect(interfaceMatch.captures.find(c => c.name === 'name').node.text).toBe('Container');
+        });
+    });
+
+    describe('Type Aliases', () => {
+        test('captures basic type alias', () => {
+            const code = `
+                type ID = string;
+            `;
+            const matches = parseAndQuery(code);
+            const typeMatch = matches.find(m => m.pattern === 'type_alias');
+            expect(typeMatch).toBeTruthy();
+            expect(typeMatch.captures.find(c => c.name === 'name').node.text).toBe('ID');
+        });
+
+        test('captures union type alias', () => {
+            const code = `
+                type Status = 'active' | 'inactive';
+            `;
+            const matches = parseAndQuery(code);
+            const typeMatch = matches.find(m => m.pattern === 'type_alias');
+            expect(typeMatch).toBeTruthy();
+            expect(typeMatch.captures.find(c => c.name === 'name').node.text).toBe('Status');
+        });
+    });
+
+    describe('Exports', () => {
+        test('captures exported interface', () => {
+            const code = `
+                export interface User {
+                    name: string;
+                }
+            `;
+            const matches = parseAndQuery(code);
+            const exportMatch = matches.find(m => m.pattern === 'export_interface');
+            expect(exportMatch).toBeTruthy();
+            expect(exportMatch.captures.find(c => c.node.type === 'interface_declaration')).toBeTruthy();
+        });
+
+        test('captures exported type alias', () => {
+            const code = `
+                export type ID = string;
+            `;
+            const matches = parseAndQuery(code);
+            const exportMatch = matches.find(m => m.pattern === 'type_export');
+            expect(exportMatch).toBeTruthy();
+            expect(exportMatch.captures.find(c => c.node.type === 'type_alias_declaration')).toBeTruthy();
+        });
+    });
+
+    // Add more test blocks for other TypeScript query patterns...
+});
