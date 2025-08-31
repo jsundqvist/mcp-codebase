@@ -37,7 +37,7 @@ When proposing solutions in this codebase, follow these principles:
 
 ## Parser Development
 
-When developing or modifying Tree-sitter parsers in this project, follow these patterns:
+When developing or modifying Tree-sitter parsers in this project, follow these patterns. These align with the Solution Design Principles, particularly modularity (for query organization) and testability (for parser configuration and testing).
 
 #### Query Organization
 - Break down large query patterns into separate, exported variables
@@ -52,18 +52,18 @@ When developing or modifying Tree-sitter parsers in this project, follow these p
 - Support testing individual patterns by allowing pattern injection
 
 #### Testing Parser Changes
-1. Test patterns in isolation using the pattern injection feature
-2. Write focused test cases with minimal code examples
-3. Include positive test cases for all supported variations
-4. Use descriptive test names that match the pattern being tested
-5. Verify that combined patterns still work as expected
+- Test patterns in isolation using the pattern injection feature
+- Write focused test cases with minimal code examples
+- Include positive test cases for all supported variations
+- Use descriptive test names that match the pattern being tested
+- Verify that combined patterns still work as expected
 
 #### Query Pattern Development
-1. Keep patterns simple and focused
-2. Use proper Tree-sitter field captures (e.g., `name:`, `body:`)
-3. Consider common variations of the syntax
-4. Document pattern assumptions and limitations
-5. Group related patterns that are commonly used together
+- Keep patterns simple and focused
+- Use proper Tree-sitter field captures (e.g., `name:`, `body:`)
+- Consider common variations of the syntax
+- Document pattern assumptions and limitations
+- Group related patterns that are commonly used together
 
 #### Tree-sitter Query Syntax Guidelines
 
@@ -137,8 +137,8 @@ When developing or modifying Tree-sitter parsers in this project, follow these p
 - Trying to match `'import'` identifier directly
 
 **Current Understanding:**
-1. Patterns must match exact AST structure
-2. Need proper nesting for complex matches
-3. Field labels are required for named nodes
-4. Captures can be on any level of nesting
-5. Each pattern stands alone (no cross-pattern references)
+- Patterns must match exact AST structure
+- Need proper nesting for complex matches
+- Field labels are required for named nodes
+- Captures can be on any level of nesting
+- Each pattern stands alone (no cross-pattern references)
