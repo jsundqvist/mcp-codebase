@@ -35,6 +35,30 @@ When proposing solutions in this codebase, follow these principles:
 - Keep related code together
 - Allow pieces to be tested in isolation when needed
 
+## Test Refactoring Guidelines
+
+When refactoring tests in this codebase, follow these critical guidelines:
+
+### Never Change Behavior
+- **DO NOT** modify the code under test when refactoring tests
+- **DO NOT** change parser patterns, capture names, or expected behavior
+- **DO NOT** alter test expectations to match new implementations
+- Only change test structure (file organization, runner code, etc.)
+- If tests are failing after refactoring, restore the original code and expectations
+
+### Test Structure Changes Only
+- Add individual test runners (`if (individual(import.meta.url))`) to enable isolated testing
+- Reorganize test files and imports
+- Update test file paths and references
+- Modify test setup and configuration
+- Change test descriptions and organization
+
+### Debugging Failing Tests
+- If tests fail after refactoring, check that the code under test is unchanged
+- Verify that parser patterns and capture names match the original implementation
+- Ensure test expectations align with the original behavior
+- Restore original patterns and expectations if they were accidentally modified
+
 ## Parser Development
 
 When developing or modifying Tree-sitter parsers in this project, follow these patterns. These align with the Solution Design Principles, particularly modularity (for query organization) and testability (for parser configuration and testing).
