@@ -106,3 +106,39 @@ When developing or modifying Tree-sitter parsers in this project, follow these p
 - Verify capture names and node types
 - Check for unintended captures
 - Use exact text matching in assertions
+
+#### Practical Examples and Findings
+
+**Valid Syntax:**
+- Node types in parentheses: `(function_declaration)`, `(string)`, `(identifier)`
+- Field labels with colon: `name:`, `source:`, `value:`
+- Captures with @: `@name`, `@function_name`
+- Nesting for parent-child relationships
+- Comments starting with `;`
+
+**Limitations Found:**
+- No negation operators (tried `!` which doesn't work)
+- No direct OR operator in patterns
+- No regex-style pattern matching
+- No direct parent/sibling references
+- `#is-not-inside?` is not a valid predicate
+
+**Working Pattern Examples:**
+- Simple capture: `(identifier) @name`
+- Named field: `name: (identifier) @name`
+- Parent with field: `(function_declaration name: (identifier) @name)`
+- Multiple captures: `(call_expression function: (identifier) @func arguments: (string) @arg)`
+
+**Patterns That Failed:**
+- Using `!` for negation: `(variable_declarator !function_declaration)`
+- Alternative syntax with `[]`: `pattern: [(array_pattern) (object_pattern)]`
+- Using `#is-not-inside?` predicate
+- Direct `(import)` node type
+- Trying to match `'import'` identifier directly
+
+**Current Understanding:**
+1. Patterns must match exact AST structure
+2. Need proper nesting for complex matches
+3. Field labels are required for named nodes
+4. Captures can be on any level of nesting
+5. Each pattern stands alone (no cross-pattern references)
