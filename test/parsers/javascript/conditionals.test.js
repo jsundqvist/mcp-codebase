@@ -1,12 +1,7 @@
 import { expect } from 'chai';
 import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
 import { conditionalPattern } from '../../../src/parsers/javascript.js';
-import { individual } from './test-utils.js';
-
-function query(parser, code) {
-    const tree = parser.parser.parse(code);
-    return parser.query.captures(tree.rootNode);
-}
+import { individual, query } from './test-utils.js';
 
 const run = function(parser) {
     describe('Conditionals', () => {
