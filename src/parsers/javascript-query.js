@@ -181,6 +181,32 @@ export const optionalPattern = `
         operator: "??") @nullish_coalesce
 `;
 
+export const loopPattern = `
+(for_statement) @for_loop
+(for_in_statement) @for_loop
+(while_statement) @while_loop
+(do_statement) @do_while_loop
+`;
+
+export const conditionalPattern = `
+    ; Conditionals
+    (if_statement) @if_statement
+    (switch_statement) @switch_statement
+`;
+
+export const statementPattern = `
+    ; Other statements
+    (return_statement) @return
+    (throw_statement) @throw
+    (break_statement) @break
+    (continue_statement) @continue
+`;
+
+export const commentPattern = `
+    ; Comments
+    (comment) @comment
+`;
+
 // The full query combines all patterns
 export const jsQuery = [
     functionPattern,
@@ -197,6 +223,9 @@ export const jsQuery = [
     spreadPattern,
     classFieldPattern,
     operatorPattern,
-    optionalPattern,
-    logicalAssignmentPattern
+    logicalAssignmentPattern,
+    loopPattern,
+    conditionalPattern,
+    statementPattern,
+    commentPattern
 ].join('\n');

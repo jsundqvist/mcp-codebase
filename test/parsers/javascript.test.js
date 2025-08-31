@@ -11,6 +11,10 @@ import objects from './javascript/objects.test.js';
 import operators from './javascript/operators.test.js';
 import restSpread from './javascript/rest-spread.test.js';
 import templateLiterals from './javascript/template-literals.test.js';
+import loops from './javascript/loops.test.js';
+import conditionals from './javascript/conditionals.test.js';
+import statements from './javascript/statements.test.js';
+import comments from './javascript/comments.test.js';
 
 describe('JavaScript', () => {
     functions();
@@ -26,4 +30,8 @@ describe('JavaScript', () => {
     operators();
     restSpread();
     templateLiterals();
+    loops();
+    conditionals();
+    statements();
+    comments();
 });
