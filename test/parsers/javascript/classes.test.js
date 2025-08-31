@@ -1,6 +1,14 @@
-import { parseAndQuery } from './test-utils.js';
+import { expect } from 'chai';
+import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
+import { classPattern } from '../../../src/parsers/javascript.js';
+import { individual } from './test-utils.js';
 
-export default function() {
+function query(parser, code) {
+    const tree = parser.parser.parse(code);
+    return parser.query.captures(tree.rootNode);
+}
+
+const run = function(parser) {
     describe('Classes', () => {
         it('captures class declarations', () => {
             const code = `class User {
@@ -8,7 +16,7 @@ export default function() {
         this.name = name;
     }
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
             expect(captures.length).to.be.greaterThan(0);
 
@@ -28,7 +36,7 @@ export default function() {
         return a + b;
     }
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
             expect(captures.length).to.be.greaterThan(0);
 
@@ -43,4 +51,11 @@ export default function() {
             expect(nameCapture.node.text).to.equal('add');
         });
     });
+};
+
+if (individual(import.meta.url)) {
+    const parser = createJavaScriptParser(classPattern);
+    run(parser);
 }
+
+export default run;

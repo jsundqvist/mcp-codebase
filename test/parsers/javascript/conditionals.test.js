@@ -1,16 +1,14 @@
 import { expect } from 'chai';
 import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
-import { conditionalPattern } from '../../../src/parsers/javascript-query.js';
+import { conditionalPattern } from '../../../src/parsers/javascript.js';
 import { individual } from './test-utils.js';
 
-const parser = createJavaScriptParser(conditionalPattern);
-
-function parseAndQuery(code) {
+function query(parser, code) {
     const tree = parser.parser.parse(code);
     return parser.query.captures(tree.rootNode);
 }
 
-const run = function() {
+const run = function(parser) {
     describe('Conditionals', () => {
         it('captures if statements', () => {
             const code = `
@@ -21,7 +19,7 @@ if (condition) {
 } else {
     defaultAction();
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             const ifStatements = captures.filter(c => c.name === 'if_statement');
@@ -40,7 +38,7 @@ switch (value) {
     default:
         defaultAction();
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             const switchStatements = captures.filter(c => c.name === 'switch_statement');
@@ -50,7 +48,8 @@ switch (value) {
 };
 
 if (individual(import.meta.url)) {
-    run();
+    const parser = createJavaScriptParser(conditionalPattern);
+    run(parser);
 }
 
 export default run;

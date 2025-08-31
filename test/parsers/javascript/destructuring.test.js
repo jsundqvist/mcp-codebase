@@ -1,14 +1,20 @@
-import { parseAndQuery } from './test-utils.js';
+import { expect } from 'chai';
+import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
+import { destructurePattern } from '../../../src/parsers/javascript.js';
+import { individual } from './test-utils.js';
 
-export default function() {
+function query(parser, code) {
+    const tree = parser.parser.parse(code);
+    return parser.query.captures(tree.rootNode);
+}
+
+const run = function(parser) {
     describe('Destructuring', () => {
-        // const jsParser = createTestParser();
-
         it('captures object and array destructuring', () => {
             const code = `
 const { x, y } = point;
 const [first, second] = array;`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             // Check object and array destructuring patterns exist
@@ -19,4 +25,11 @@ const [first, second] = array;`;
             expect(arrayDestructures.map(c => c.node.type)).to.deep.equal(['array_pattern']);
         });
     });
+};
+
+if (individual(import.meta.url)) {
+    const parser = createJavaScriptParser(destructurePattern);
+    run(parser);
 }
+
+export default run;

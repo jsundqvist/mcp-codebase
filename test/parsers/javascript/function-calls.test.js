@@ -1,13 +1,19 @@
-import { parseAndQuery } from './test-utils.js';
+import { expect } from 'chai';
+import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
+import { callPattern } from '../../../src/parsers/javascript.js';
+import { individual } from './test-utils.js';
 
-export default function() {
+function query(parser, code) {
+    const tree = parser.parser.parse(code);
+    return parser.query.captures(tree.rootNode);
+}
+
+const run = function(parser) {
     describe('Function Calls', () => {
-        // const jsParser = createTestParser();
-
         it('captures direct function calls', () => {
             const code = `calculate();
 doSomething(arg1, arg2);`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             // Check function call captures
@@ -23,7 +29,7 @@ doSomething(arg1, arg2);`;
         it('captures method calls', () => {
             const code = `console.log("test");
 object.method(arg);`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             // Check method call captures
@@ -40,4 +46,11 @@ object.method(arg);`;
             expect(propertyCaptures.map(c => c.node.text)).to.deep.equal(['log', 'method']);
         });
     });
+};
+
+if (individual(import.meta.url)) {
+    const parser = createJavaScriptParser(callPattern);
+    run(parser);
 }
+
+export default run;

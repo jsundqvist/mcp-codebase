@@ -1,6 +1,14 @@
-import { parseAndQuery } from './test-utils.js';
+import { expect } from 'chai';
+import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
+import { modulePattern } from '../../../src/parsers/javascript.js';
+import { individual } from './test-utils.js';
 
-export default function() {
+function query(parser, code) {
+    const tree = parser.parser.parse(code);
+    return parser.query.captures(tree.rootNode);
+}
+
+const run = function(parser) {
     describe('Modules', () => {
         it('captures static and dynamic imports', () => {
             const code = `
@@ -19,7 +27,7 @@ if (feature.enabled) {
 
 // Dynamic imports with destructuring
 const { default: DefaultComponent, utils } = await import('./module');`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
             // Check static imports and their sources
             const staticSources = new Set(
@@ -85,7 +93,7 @@ async function loadData() {
     const mod = await import('./internal.js');
     return { result, mod };
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
             // Verify top-level await expressions
             const topLevelAwaits = captures.filter(c => c.name === 'top_level_await');
@@ -117,7 +125,7 @@ export const config = {
 };
 
 export var legacy = false;`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
             // Check function export
             const functionExport = captures.find(c => c.name === 'export_function');
@@ -138,4 +146,11 @@ export var legacy = false;`;
             expect(types).to.include('variable_declaration');
         });
     });
+};
+
+if (individual(import.meta.url)) {
+    const parser = createJavaScriptParser(modulePattern);
+    run(parser);
 }
+
+export default run;

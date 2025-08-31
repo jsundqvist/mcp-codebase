@@ -1,9 +1,15 @@
-import { parseAndQuery } from './test-utils.js';
+import { expect } from 'chai';
+import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
+import { templatePattern } from '../../../src/parsers/javascript.js';
+import { individual } from './test-utils.js';
 
-export default function() {
+function query(parser, code) {
+    const tree = parser.parser.parse(code);
+    return parser.query.captures(tree.rootNode);
+}
+
+const run = function(parser) {
     describe('Template Literals', () => {
-        // const jsParser = createTestParser();
-
         it('captures template strings and expressions', () => {
             const code = `
 const name = "world";
@@ -13,7 +19,7 @@ line 1
 \${value}
 line 2
 \`;`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             // Check template strings
@@ -30,4 +36,11 @@ line 2
             expect(vars.map(c => c.node.text)).to.deep.equal(['name', 'value']);
         });
     });
+};
+
+if (individual(import.meta.url)) {
+    const parser = createJavaScriptParser(templatePattern);
+    run(parser);
 }
+
+export default run;

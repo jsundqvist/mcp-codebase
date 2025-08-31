@@ -1,9 +1,15 @@
-import { parseAndQuery } from './test-utils.js';
+import { expect } from 'chai';
+import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
+import { classFieldPattern } from '../../../src/parsers/javascript.js';
+import { individual } from './test-utils.js';
 
-export default function() {
+function query(parser, code) {
+    const tree = parser.parser.parse(code);
+    return parser.query.captures(tree.rootNode);
+}
+
+const run = function(parser) {
     describe('Class Fields', () => {
-        // const jsParser = createTestParser();
-
         it('captures class fields and private members', () => {
             const code = `
 class Example {
@@ -40,7 +46,7 @@ class Example {
         return Example.#createInstance();
     }
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             // Check public fields
@@ -72,4 +78,11 @@ class Example {
             expect(setters.map(c => c.node.text)).to.deep.equal(['set #secretValue(value) {\n        this.#private = value / 2;\n    }']);
         });
     });
+};
+
+if (individual(import.meta.url)) {
+    const parser = createJavaScriptParser(classFieldPattern);
+    run(parser);
 }
+
+export default run;

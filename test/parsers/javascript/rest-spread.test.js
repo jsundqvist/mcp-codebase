@@ -1,9 +1,15 @@
-import { parseAndQuery } from './test-utils.js';
+import { expect } from 'chai';
+import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
+import { spreadPattern } from '../../../src/parsers/javascript.js';
+import { individual } from './test-utils.js';
 
-export default function() {
+function query(parser, code) {
+    const tree = parser.parser.parse(code);
+    return parser.query.captures(tree.rootNode);
+}
+
+const run = function(parser) {
     describe('Rest and Spread', () => {
-        // const jsParser = createTestParser();
-
         it('captures rest parameters and spread elements', () => {
             const code = `
 function sum(...numbers) {
@@ -11,7 +17,7 @@ function sum(...numbers) {
 }
 const array = [1, 2, 3];
 const combined = [...array, 4, 5];`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             // Check rest parameter
@@ -25,4 +31,11 @@ const combined = [...array, 4, 5];`;
             expect(spreadVars[0].node.text).to.equal('array');
         });
     });
+};
+
+if (individual(import.meta.url)) {
+    const parser = createJavaScriptParser(spreadPattern);
+    run(parser);
 }
+
+export default run;

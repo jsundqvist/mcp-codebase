@@ -1,23 +1,21 @@
 import { expect } from 'chai';
 import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
-import { loopPattern } from '../../../src/parsers/javascript-query.js';
+import { loopPattern } from '../../../src/parsers/javascript.js';
 import { individual } from './test-utils.js';
 
-const parser = createJavaScriptParser(loopPattern);
-
-function parseAndQuery(code) {
+function query(parser, code) {
     const tree = parser.parser.parse(code);
     return parser.query.captures(tree.rootNode);
 }
 
-const run = function() {
+const run = function(parser) {
     describe('Loops', () => {
         it('captures for loops', () => {
             const code = `
 for (let i = 0; i < 10; i++) {
     console.log(i);
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             const forLoops = captures.filter(c => c.name === 'for_loop');
@@ -32,7 +30,7 @@ for (let key in obj) {
 for (let value of arr) {
     console.log(value);
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             const loops = captures.filter(c => c.name === 'for_loop');
@@ -47,7 +45,7 @@ while (condition) {
 do {
     doSomething();
 } while (condition);`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             const whileLoops = captures.filter(c => c.name === 'while_loop');
@@ -60,7 +58,8 @@ do {
 };
 
 if (individual(import.meta.url)) {
-    run();
+    const parser = createJavaScriptParser(loopPattern);
+    run(parser);
 }
 
 export default run;

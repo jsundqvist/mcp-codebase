@@ -1,16 +1,22 @@
-import { parseAndQuery } from './test-utils.js';
+import { expect } from 'chai';
+import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
+import { errorHandlingPattern } from '../../../src/parsers/javascript.js';
+import { individual } from './test-utils.js';
 
-export default function() {
+function query(parser, code) {
+    const tree = parser.parser.parse(code);
+    return parser.query.captures(tree.rootNode);
+}
+
+const run = function(parser) {
     describe('Error Handling', () => {
-        // const jsParser = createTestParser();
-
         it('captures try-catch blocks', () => {
             const code = `try {
     riskyOperation();
 } catch (error) {
     console.error(error);
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             // Check error handling structure
@@ -31,4 +37,11 @@ export default function() {
             expect(catchBodyCapture).to.be.ok;
         });
     });
+};
+
+if (individual(import.meta.url)) {
+    const parser = createJavaScriptParser(errorHandlingPattern);
+    run(parser);
 }
+
+export default run;

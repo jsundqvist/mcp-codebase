@@ -1,6 +1,14 @@
-import { parseAndQuery } from './test-utils.js';
+import { expect } from 'chai';
+import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
+import { asyncPattern } from '../../../src/parsers/javascript.js';
+import { individual } from './test-utils.js';
 
-export default function() {
+function query(parser, code) {
+    const tree = parser.parser.parse(code);
+    return parser.query.captures(tree.rootNode);
+}
+
+const run = function(parser) {
     describe('Async/Await', () => {
         it('captures async functions and await expressions', () => {
             const code = `
@@ -8,7 +16,7 @@ async function fetchData() {
     const result = await fetch('/api');
     return result;
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             // Check async function
@@ -23,4 +31,11 @@ async function fetchData() {
             expect(awaits.map(c => c.node.type)).to.deep.equal(['await_expression']);
         });
     });
+};
+
+if (individual(import.meta.url)) {
+    const parser = createJavaScriptParser(asyncPattern);
+    run(parser);
 }
+
+export default run;

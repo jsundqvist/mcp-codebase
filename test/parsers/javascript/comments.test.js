@@ -1,22 +1,20 @@
 import { expect } from 'chai';
 import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
-import { commentPattern } from '../../../src/parsers/javascript-query.js';
+import { commentPattern } from '../../../src/parsers/javascript.js';
 import { individual } from './test-utils.js';
 
-const parser = createJavaScriptParser(commentPattern);
-
-function parseAndQuery(code) {
+function query(parser, code) {
     const tree = parser.parser.parse(code);
     return parser.query.captures(tree.rootNode);
 }
 
-const run = function() {
+const run = function(parser) {
     describe('Comments', () => {
         it('captures single-line comments', () => {
             const code = `
 // This is a single-line comment
 const x = 1;`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             const comments = captures.filter(c => c.name === 'comment');
@@ -31,7 +29,7 @@ const x = 1;`;
  * with multiple lines
  */
 const y = 2;`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             const comments = captures.filter(c => c.name === 'comment');
@@ -42,7 +40,8 @@ const y = 2;`;
 };
 
 if (individual(import.meta.url)) {
-    run();
+    const parser = createJavaScriptParser(commentPattern);
+    run(parser);
 }
 
 export default run;

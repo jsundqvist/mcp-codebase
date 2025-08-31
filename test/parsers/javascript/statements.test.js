@@ -1,16 +1,14 @@
 import { expect } from 'chai';
 import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
-import { statementPattern } from '../../../src/parsers/javascript-query.js';
+import { statementPattern } from '../../../src/parsers/javascript.js';
 import { individual } from './test-utils.js';
 
-const parser = createJavaScriptParser(statementPattern);
-
-function parseAndQuery(code) {
+function query(parser, code) {
     const tree = parser.parser.parse(code);
     return parser.query.captures(tree.rootNode);
 }
 
-const run = function() {
+const run = function(parser) {
     describe('Statements', () => {
         it('captures return statements', () => {
             const code = `
@@ -20,7 +18,7 @@ function test() {
     }
     return null;
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             const returns = captures.filter(c => c.name === 'return');
@@ -34,7 +32,7 @@ function test() {
         throw new Error('message');
     }
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             const throws = captures.filter(c => c.name === 'throw');
@@ -52,7 +50,7 @@ for (let i = 0; i < 10; i++) {
     }
     console.log(i);
 }`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             const breaks = captures.filter(c => c.name === 'break');
@@ -65,7 +63,8 @@ for (let i = 0; i < 10; i++) {
 };
 
 if (individual(import.meta.url)) {
-    run();
+    const parser = createJavaScriptParser(statementPattern);
+    run(parser);
 }
 
 export default run;

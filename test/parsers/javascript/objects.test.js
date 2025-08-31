@@ -1,9 +1,15 @@
-import { parseAndQuery } from './test-utils.js';
+import { expect } from 'chai';
+import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
+import { objectPattern } from '../../../src/parsers/javascript.js';
+import { individual } from './test-utils.js';
 
-export default function() {
+function query(parser, code) {
+    const tree = parser.parser.parse(code);
+    return parser.query.captures(tree.rootNode);
+}
+
+const run = function(parser) {
     describe('Objects', () => {
-        // const jsParser = createTestParser();
-
         it('captures object properties and methods', () => {
             const code = `
 const obj = {
@@ -13,7 +19,7 @@ const obj = {
         return this.value;
     }
 };`;
-            const captures = parseAndQuery(code);
+            const captures = query(parser, code);
             expect(captures).to.be.ok;
 
             // Check property captures
@@ -27,4 +33,11 @@ const obj = {
             expect(methodCapture.node.text).to.equal('method');
         });
     });
+};
+
+if (individual(import.meta.url)) {
+    const parser = createJavaScriptParser(objectPattern);
+    run(parser);
 }
+
+export default run;
