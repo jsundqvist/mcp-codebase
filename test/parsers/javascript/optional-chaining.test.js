@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
 import { optionalPattern } from '../../../src/parsers/javascript.js';
-import { individual, query } from './test-utils.js';
+import { individual, query } from '../test-utils.js';
 
 const run = function(parser) {
     describe('Optional Chaining', () => {
