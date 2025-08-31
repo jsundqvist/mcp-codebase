@@ -1,7 +1,6 @@
 import { parseAndQuery } from './test-utils.js';
 
-describe('JavaScript', () => {
-  describe('Member Access and Operators', () => {
+describe('Member Access and Operators', () => {
 
     it('captures basic member access and binary expressions', () => {
         const code = `
@@ -12,13 +11,13 @@ const obj = {
 const value = obj.x;
 const sum = a + b;
 const product = x * y;`;
-    const captures = parseAndQuery(code);
+        const captures = parseAndQuery(code);
         expect(captures).to.be.ok;
-        
+
         // Check member expressions
         const memberAccess = captures.filter(c => c.name === 'member');
         expect(memberAccess.length).to.equal(1);  // obj.x
-        
+
         // Check binary expressions
         const binaryOps = captures.filter(c => c.name === 'binary');
         expect(binaryOps.length).to.equal(2);  // + and * operations
@@ -61,7 +60,7 @@ cache.maxSize ||= 1000;  // Set if falsy`;
         // Check full assignments
         const assignments = captures.filter(c => c.name === 'logical_assignment');
         expect(assignments.length).to.equal(6);  // All logical assignments
-        
+
         // Verify we captured some specific assignments
         const assignmentTexts = assignments.map(c => c.node.text);
         expect(assignmentTexts.some(t => t.includes('settings.timeout ??= 5000'))).to.equal(true);
@@ -88,13 +87,13 @@ const fallback = value ?? backup ?? default ?? null;
 
 // Combined optional chaining and nullish coalescing
 const complex = user?.settings?.theme?.color ?? defaultTheme?.color ?? '#000000';`;
-    const captures = parseAndQuery(code);
+        const captures = parseAndQuery(code);
         expect(captures).to.be.ok;
-        
+
         // Check optional chain expressions
         const optionalChains = captures.filter(c => c.name === 'optional_chain');
         expect(optionalChains.length).to.equal(17);  // All ?. operators
-        
+
         // Check nullish coalescing expressions
         const nullishCoalesce = captures.filter(c => c.name === 'nullish_coalesce');
         expect(nullishCoalesce.length).to.equal(7);  // All ?? operators
@@ -103,21 +102,20 @@ const complex = user?.settings?.theme?.color ?? defaultTheme?.color ?? '#000000'
         const code2 = `
 const item = array?.[0]?.name;
 const element = list?.[index]?.value;`;
-    const arrayCaptures = parseAndQuery(code2);
+        const arrayCaptures = parseAndQuery(code2);
         const arrayOptionalChains = arrayCaptures.filter(c => c.name === 'optional_chain');
         expect(arrayOptionalChains.length).to.equal(4);  // array?.[0], [0]?.name, list?.[index], [index]?.value
 
         // Verify specific pattern types exist
-        const hasMethodChain = optionalChains.some(c => 
-            c.node.text?.includes('compute') || 
+        const hasMethodChain = optionalChains.some(c =>
+            c.node.text?.includes('compute') ||
             c.node.parent?.text?.includes('compute?.'));
         expect(hasMethodChain).to.equal(true, 'Should find optional chaining with compute method');
 
         // Verify multiple nullish coalescing
-        const hasMultipleNullish = nullishCoalesce.some(c => 
-            c.node.text?.includes('??') && 
+        const hasMultipleNullish = nullishCoalesce.some(c =>
+            c.node.text?.includes('??') &&
             (c.node.parent?.text?.includes('backup') || c.node.text?.includes('backup')));
         expect(hasMultipleNullish).to.equal(true, 'Should find nullish coalescing with backup value');
     });
-  });
 });

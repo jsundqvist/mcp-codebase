@@ -1,7 +1,6 @@
 import { parseAndQuery } from './test-utils.js';
 
-describe('JavaScript', () => {
-  describe('Modules', () => {
+describe('Modules', () => {
     it('captures static and dynamic imports', () => {
         const code = `
 // Static imports
@@ -137,5 +136,4 @@ export var legacy = false;`;
         expect(types).to.include('lexical_declaration');
         expect(types).to.include('variable_declaration');
     });
-  });
 });

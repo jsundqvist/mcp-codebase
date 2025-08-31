@@ -1,7 +1,6 @@
 import { parseAndQuery } from './test-utils.js';
 
-describe('JavaScript', () => {
-  describe('Class Fields', () => {
+describe('Class Fields', () => {
     // const jsParser = createTestParser();
 
     it('captures class fields and private members', () => {
@@ -14,7 +13,7 @@ class Example {
     // Private fields
     #private = 123;
     static #instances = 0;
-    
+
     // Private methods
     #privateMethod() {
         return this.#private;
@@ -40,15 +39,15 @@ class Example {
         return Example.#createInstance();
     }
 }`;
-    const captures = parseAndQuery(code);
+        const captures = parseAndQuery(code);
         expect(captures).to.be.ok;
-        
+
         // Check public fields
         const fields = captures.filter(c => c.name === 'field_name');
         expect(fields.length).to.equal(2);  // name and count
         expect(fields.map(c => c.node.text)).to.include('name');
         expect(fields.map(c => c.node.text)).to.include('count');
-        
+
         // Check private identifiers
         const privateNames = captures.filter(c => c.name === 'private_name');
         const privateTexts = privateNames.map(c => c.node.text);
@@ -73,5 +72,4 @@ class Example {
         const setters = captures.filter(c => c.name === 'setter_method');
         expect(setters.length).to.equal(1);  // #secretValue setter
     });
-  });
 });
