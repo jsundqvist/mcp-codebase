@@ -143,7 +143,7 @@ export var legacy = false;`;
                 expect(varExport).to.be.ok;
                 // Check declarations
                 const declCaptures = captures.filter(c => c.name === 'export_decl');
-                expect(declCaptures.length).to.equal(4);  // function, class, const, var
+                expect(declCaptures.map(c => c.node.type)).to.deep.equal(['function_declaration', 'class_declaration', 'lexical_declaration', 'variable_declaration']);  // function, class, const, var
                 const types = declCaptures.map(c => c.node.type);
                 expect(types).to.include('function_declaration');
                 expect(types).to.include('class_declaration');

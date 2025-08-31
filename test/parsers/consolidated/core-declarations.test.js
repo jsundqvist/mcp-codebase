@@ -35,7 +35,7 @@ const run = function(parser) {
 }`;
                 const captures = query(parser, code);
                 expect(captures).to.be.ok;
-                expect(captures.length).to.be.greaterThan(0);
+                expect(captures.map(c => c.name)).to.deep.equal(['function', 'name', 'return', 'binary']);
 
                 // Check that we have both the function and name captures
                 const functionCapture = captures.find(c => c.name === 'function');
@@ -57,7 +57,7 @@ const run = function(parser) {
 }`;
                 const captures = query(parser, code);
                 expect(captures).to.be.ok;
-                expect(captures.length).to.be.greaterThan(0);
+                expect(captures.map(c => c.name)).to.deep.equal(['class', 'class_name', 'method', 'method_name', 'object_method', 'method_name', 'member']);
 
                 // Check that we have both the class and name captures
                 const classCapture = captures.find(c => c.name === 'class');
@@ -77,7 +77,7 @@ const run = function(parser) {
 }`;
                 const captures = query(parser, code);
                 expect(captures).to.be.ok;
-                expect(captures.length).to.be.greaterThan(0);
+                expect(captures.map(c => c.name)).to.deep.equal(['class', 'class_name', 'method', 'method_name', 'object_method', 'method_name', 'return', 'binary']);
 
                 // Check for method capture
                 const methodCapture = captures.find(c => c.name === 'method');
@@ -98,16 +98,15 @@ let age = 30;
 var city = 'New York';`;
                 const captures = query(parser, code);
                 expect(captures).to.be.ok;
-                expect(captures.length).to.be.greaterThan(0);
+                expect(captures.map(c => c.name)).to.deep.equal(['variable', 'var_name', 'variable', 'var_name', 'variable', 'var_name']);
 
                 // Check for variable captures
                 const variableCaptures = captures.filter(c => c.name === 'variable');
-                expect(variableCaptures.length).to.be.greaterThan(0);
+                expect(variableCaptures.map(c => c.node.type)).to.deep.equal(['variable_declarator', 'variable_declarator', 'variable_declarator']);
 
                 // Check for name captures
                 const nameCaptures = captures.filter(c => c.name === 'var_name');
-                expect(nameCaptures.length).to.be.greaterThan(0);
-                expect(nameCaptures.map(c => c.node.text)).to.include.members(['name', 'age', 'city']);
+                expect(nameCaptures.map(c => c.node.text)).to.deep.equal(['name', 'age', 'city']);
             });
         });
 
@@ -128,7 +127,6 @@ const withBlock = (value) => {
 
                 // Check parameter captures
                 const paramCaptures = captures.filter(c => c.name === 'param_name');
-                expect(paramCaptures.length).to.equal(2);
                 expect(paramCaptures.map(c => c.node.text)).to.deep.equal(['x', 'value']);
             });
         });
@@ -148,7 +146,6 @@ const obj = {
 
                 // Check property captures
                 const propCaptures = captures.filter(c => c.name === 'prop_name');
-                expect(propCaptures.length).to.equal(2); // name and value
                 expect(propCaptures.map(c => c.node.text)).to.deep.equal(['name', 'value']);
 
                 // Check method capture
@@ -184,15 +181,15 @@ const [first, second] = array;`;
 }`;
                 const captures = query(parser, code);
                 expect(captures).to.be.ok;
-                expect(captures.length).to.be.greaterThan(0);
+                expect(captures.map(c => c.name)).to.deep.equal(['function', 'async_function', 'async_keyword', 'name', 'async_name', 'variable', 'var_name', 'await_expr', 'function_call', 'function_name', 'variable', 'var_name', 'await_expr', 'method_call', 'object', 'member', 'property', 'return']);
 
                 // Check for async function captures
                 const asyncCaptures = captures.filter(c => c.name === 'async_function');
-                expect(asyncCaptures.length).to.be.greaterThan(0);
+                expect(asyncCaptures.map(c => c.node.type)).to.deep.equal(['function_declaration']);
 
                 // Check for await captures
                 const awaitCaptures = captures.filter(c => c.name === 'await_expr');
-                expect(awaitCaptures.length).to.be.greaterThan(0);
+                expect(awaitCaptures.map(c => c.node.type)).to.deep.equal(['await_expression', 'await_expression']);
             });
         });
 
@@ -219,7 +216,6 @@ line 2
 
                 // Check template variables
                 const vars = captures.filter(c => c.name === 'template_var');
-                expect(vars.length).to.equal(2);
                 expect(vars.map(c => c.node.text)).to.deep.equal(['name', 'value']);
             });
         });
@@ -237,13 +233,11 @@ const combined = [...array, 4, 5];`;
 
                 // Check rest parameter
                 const restParams = captures.filter(c => c.name === 'rest_param');
-                expect(restParams.length).to.equal(1);
-                expect(restParams[0].node.text).to.equal('numbers');
+                expect(restParams.map(c => c.node.text)).to.deep.equal(['numbers']);
 
                 // Check spread element
                 const spreadVars = captures.filter(c => c.name === 'spread_var');
-                expect(spreadVars.length).to.equal(1);
-                expect(spreadVars[0].node.text).to.equal('array');
+                expect(spreadVars.map(c => c.node.text)).to.deep.equal(['array']);
             });
         });
     });

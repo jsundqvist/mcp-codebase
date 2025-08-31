@@ -24,7 +24,7 @@ const run = function(parser) {
 
                 // Check static field captures
                 const staticFields = captures.filter(c => c.name === 'static_field');
-                expect(staticFields.length).to.equal(3);
+                expect(staticFields.map(c => c.node.type)).to.deep.equal(['field_definition', 'field_definition', 'field_definition']);
             });
 
             it('captures instance class fields', () => {
@@ -38,11 +38,10 @@ const run = function(parser) {
 
                 // Check instance field captures
                 const instanceFields = captures.filter(c => c.name === 'field');
-                expect(instanceFields.length).to.equal(3);
+                expect(instanceFields.map(c => c.node.type)).to.deep.equal(['field_definition', 'field_definition', 'field_definition']);
 
                 // Check field names
                 const fieldNames = captures.filter(c => c.name === 'field_name');
-                expect(fieldNames.length).to.equal(3);
                 expect(fieldNames.map(c => c.node.text)).to.deep.equal(['name', 'age', 'isActive']);
             });
 
@@ -57,7 +56,6 @@ const run = function(parser) {
 
                 // Check private field captures
                 const privateFields = captures.filter(c => c.name === 'private_name');
-                expect(privateFields.length).to.equal(3);
                 expect(privateFields.map(c => c.node.text)).to.deep.equal(['#balance', '#accountNumber', '#transactions']);
             });
 
@@ -72,7 +70,7 @@ const run = function(parser) {
 
                 // Check computed field captures
                 const computedFields = captures.filter(c => c.name === 'field');
-                expect(computedFields.length).to.equal(0);  // Pattern doesn't capture computed properties
+                expect(computedFields.map(c => c.node.type)).to.deep.equal([]);  // Pattern doesn't capture computed properties
             });
 
             it('captures mixed field types', () => {
@@ -89,9 +87,9 @@ const run = function(parser) {
                 const instanceFields = captures.filter(c => c.name === 'field');
                 const privateFields = captures.filter(c => c.name === 'private_name');
 
-                expect(staticFields.length).to.equal(1);
-                expect(instanceFields.length).to.equal(1);
-                expect(privateFields.length).to.equal(2);
+                expect(staticFields.map(c => c.node.type)).to.deep.equal(['field_definition']);
+                expect(instanceFields.map(c => c.node.type)).to.deep.equal(['field_definition']);
+                expect(privateFields.map(c => c.node.text)).to.deep.equal(['#VERSION', '#private']);
             });
         });
 
@@ -108,7 +106,7 @@ const run = function(parser) {
 
                 // Check arrow function field captures
                 const arrowFields = captures.filter(c => c.name === 'field');
-                expect(arrowFields.length).to.equal(2);
+                expect(arrowFields.map(c => c.node.type)).to.deep.equal(['field_definition', 'field_definition']);
             });
 
             it('captures method fields', () => {
@@ -123,7 +121,7 @@ const run = function(parser) {
 
                 // Check method field captures
                 const methodFields = captures.filter(c => c.name === 'field');
-                expect(methodFields.length).to.equal(2);
+                expect(methodFields.map(c => c.node.type)).to.deep.equal(['field_definition', 'field_definition']);
             });
         });
     });

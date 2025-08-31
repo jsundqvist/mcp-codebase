@@ -80,7 +80,8 @@ When developing or modifying Tree-sitter parsers in this project, follow these p
 - Write focused test cases with minimal code examples
 - Include positive test cases for all supported variations
 - Use descriptive test names that match the pattern being tested
-- Prefer deep equality assertions on captured content (e.g., `captures.map(c => c.node.text)`) over simple length checks to ensure exact matches and catch regressions
+- **Prefer deep equality assertions on captured content (e.g., `captures.map(c => c.node.text)`) over simple length checks** to ensure exact matches and catch regressions
+- **Replace length assertions with deep equal assertions** to show actual vs expected results when tests fail, making debugging much easier
 - Verify that combined patterns still work as expected
 
 #### Query Pattern Development

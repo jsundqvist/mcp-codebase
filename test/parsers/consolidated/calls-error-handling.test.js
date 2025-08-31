@@ -20,11 +20,11 @@ const run = function(parser) {
 console.log('Hello');`;
                 const captures = query(parser, code);
                 expect(captures).to.be.ok;
-                expect(captures.length).to.be.greaterThan(0);
+                expect(captures.map(c => c.name)).to.deep.equal(['function_call', 'function_name', 'method_call', 'object', 'member', 'property']);
 
                 // Check for direct function call captures
                 const callCaptures = captures.filter(c => c.name === 'function_call');
-                expect(callCaptures.length).to.be.greaterThan(0);
+                expect(callCaptures.map(c => c.node.type)).to.deep.equal(['call_expression']);
             });
 
             it('captures method calls', () => {
@@ -32,11 +32,11 @@ console.log('Hello');`;
 array.push(item);`;
                 const captures = query(parser, code);
                 expect(captures).to.be.ok;
-                expect(captures.length).to.be.greaterThan(0);
+                expect(captures.map(c => c.name)).to.deep.equal(['method_call', 'object', 'member', 'property', 'method_call', 'object', 'member', 'property']);
 
                 // Check for method call captures
                 const methodCaptures = captures.filter(c => c.name === 'method_call');
-                expect(methodCaptures.length).to.be.greaterThan(0);
+                expect(methodCaptures.map(c => c.node.type)).to.deep.equal(['call_expression', 'call_expression']);
             });
         });
 

@@ -35,11 +35,11 @@ const product = x * y;`;
 
                 // Check member expressions
                 const memberAccess = captures.filter(c => c.name === 'member');
-                expect(memberAccess.length).to.equal(1);  // obj.x
+                expect(memberAccess.map(c => c.node.type)).to.deep.equal(['member_expression']);  // obj.x
 
                 // Check binary expressions
                 const binaryOps = captures.filter(c => c.name === 'binary');
-                expect(binaryOps.length).to.equal(2);  // + and * operations
+                expect(binaryOps.map(c => c.node.type)).to.deep.equal(['binary_expression', 'binary_expression']);  // + and * operations
             });
         });
 
@@ -65,7 +65,7 @@ cache.maxSize ||= 1000;  // Set if falsy`;
 
                 // Check logical assignments
                 const logicalOps = captures.filter(c => c.name === 'logical_operator');
-                expect(logicalOps.length).to.equal(6);  // 2 of each operator type
+                expect(logicalOps.map(c => c.node.text)).to.deep.equal(['??=', '??=', '&&=', '&&=', '||=', '||=']);  // 2 of each operator type
 
                 // Group by operator type
                 const operators = logicalOps.map(c => c.node.text);
@@ -74,13 +74,13 @@ cache.maxSize ||= 1000;  // Set if falsy`;
                 const orAssigns = operators.filter(op => op === '||=');
 
                 // Check counts of each type
-                expect(nullishAssigns.length).to.equal(2);  // timeout and retries
-                expect(andAssigns.length).to.equal(2);      // verbose and write
-                expect(orAssigns.length).to.equal(2);       // contentType and maxSize
+                expect(nullishAssigns).to.deep.equal(['??=', '??=']);  // timeout and retries
+                expect(andAssigns).to.deep.equal(['&&=', '&&=']);      // verbose and write
+                expect(orAssigns).to.deep.equal(['||=', '||=']);       // contentType and maxSize
 
                 // Check full assignments
                 const assignments = captures.filter(c => c.name === 'logical_assignment');
-                expect(assignments.length).to.equal(6);  // All logical assignments
+                expect(assignments.map(c => c.node.type)).to.deep.equal(['augmented_assignment_expression', 'augmented_assignment_expression', 'augmented_assignment_expression', 'augmented_assignment_expression', 'augmented_assignment_expression', 'augmented_assignment_expression']);  // All logical assignments
 
                 // Verify we captured some specific assignments
                 const assignmentTexts = assignments.map(c => c.node.text);
@@ -115,11 +115,11 @@ const complex = user?.settings?.theme?.color ?? defaultTheme?.color ?? '#000000'
 
                 // Check optional chain expressions
                 const optionalChains = captures.filter(c => c.name === 'optional_chain');
-                expect(optionalChains.length).to.equal(17);  // All ?. operators
+                expect(optionalChains.map(c => c.name)).to.deep.equal(['optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain', 'optional_chain']);  // All ?. operators
 
                 // Check nullish coalescing expressions
                 const nullishCoalesce = captures.filter(c => c.name === 'nullish_coalesce');
-                expect(nullishCoalesce.length).to.equal(7);  // All ?? operators
+                expect(nullishCoalesce.map(c => c.node.type)).to.deep.equal(['binary_expression', 'binary_expression', 'binary_expression', 'binary_expression', 'binary_expression', 'binary_expression', 'binary_expression']);  // All ?? operators
 
                 // Add array access case
                 const code2 = `
@@ -127,7 +127,7 @@ const item = array?.[0]?.name;
 const element = list?.[index]?.value;`;
                 const arrayCaptures = query(parser, code2);
                 const arrayOptionalChains = arrayCaptures.filter(c => c.name === 'optional_chain');
-                expect(arrayOptionalChains.length).to.equal(4);  // array?.[0], [0]?.name, list?.[index], [index]?.value
+                expect(arrayOptionalChains.map(c => c.name)).to.deep.equal(['optional_chain', 'optional_chain', 'optional_chain', 'optional_chain']);  // array?.[0], [0]?.name, list?.[index], [index]?.value
 
                 // Verify specific pattern types exist
                 const hasMethodChain = optionalChains.some(c =>
@@ -149,11 +149,11 @@ const element = list?.[index]?.value;`;
 console.log('Hello');`;
                 const captures = query(parser, code);
                 expect(captures).to.be.ok;
-                expect(captures.length).to.be.greaterThan(0);
+                expect(captures.map(c => c.name)).to.deep.equal(['function_call', 'function_name', 'method_call', 'object', 'member', 'property']);
 
                 // Check for direct function call captures
                 const callCaptures = captures.filter(c => c.name === 'function_call');
-                expect(callCaptures.length).to.be.greaterThan(0);
+                expect(callCaptures.map(c => c.node.type)).to.deep.equal(['call_expression']);
             });
 
             it('captures method calls', () => {
@@ -161,11 +161,11 @@ console.log('Hello');`;
 array.push(item);`;
                 const captures = query(parser, code);
                 expect(captures).to.be.ok;
-                expect(captures.length).to.be.greaterThan(0);
+                expect(captures.map(c => c.name)).to.deep.equal(['method_call', 'object', 'member', 'property', 'method_call', 'object', 'member', 'property']);
 
                 // Check for method call captures
                 const methodCaptures = captures.filter(c => c.name === 'method_call');
-                expect(methodCaptures.length).to.be.greaterThan(0);
+                expect(methodCaptures.map(c => c.node.type)).to.deep.equal(['call_expression', 'call_expression']);
             });
         });
 
