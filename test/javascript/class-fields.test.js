@@ -1,10 +1,11 @@
 import { parseAndQuery } from './test-utils.js';
 
-describe('Class Fields', () => {
-    // const jsParser = createTestParser();
+export default function() {
+    describe('Class Fields', () => {
+        // const jsParser = createTestParser();
 
-    it('captures class fields and private members', () => {
-        const code = `
+        it('captures class fields and private members', () => {
+            const code = `
 class Example {
     // Public fields
     name = "test";
@@ -39,37 +40,38 @@ class Example {
         return Example.#createInstance();
     }
 }`;
-        const captures = parseAndQuery(code);
-        expect(captures).to.be.ok;
+            const captures = parseAndQuery(code);
+            expect(captures).to.be.ok;
 
-        // Check public fields
-        const fields = captures.filter(c => c.name === 'field_name');
-        expect(fields.length).to.equal(2);  // name and count
-        expect(fields.map(c => c.node.text)).to.include('name');
-        expect(fields.map(c => c.node.text)).to.include('count');
+            // Check public fields
+            const fields = captures.filter(c => c.name === 'field_name');
+            expect(fields.length).to.equal(2);  // name and count
+            expect(fields.map(c => c.node.text)).to.include('name');
+            expect(fields.map(c => c.node.text)).to.include('count');
 
-        // Check private identifiers
-        const privateNames = captures.filter(c => c.name === 'private_name');
-        const privateTexts = privateNames.map(c => c.node.text);
+            // Check private identifiers
+            const privateNames = captures.filter(c => c.name === 'private_name');
+            const privateTexts = privateNames.map(c => c.node.text);
 
-        // Verify each private member exists
-        expect(privateTexts).to.include('#private');  // instance field
-        expect(privateTexts).to.include('#instances');  // static field
-        expect(privateTexts).to.include('#privateMethod');  // instance method
-        expect(privateTexts).to.include('#createInstance');  // static method
-        expect(privateTexts).to.include('#secretValue');  // accessor property
+            // Verify each private member exists
+            expect(privateTexts).to.include('#private');  // instance field
+            expect(privateTexts).to.include('#instances');  // static field
+            expect(privateTexts).to.include('#privateMethod');  // instance method
+            expect(privateTexts).to.include('#createInstance');  // static method
+            expect(privateTexts).to.include('#secretValue');  // accessor property
 
-        // Check typed captures
-        const staticFields = captures.filter(c => c.name === 'static_field');
-        expect(staticFields.length).to.equal(1);  // #instances
+            // Check typed captures
+            const staticFields = captures.filter(c => c.name === 'static_field');
+            expect(staticFields.length).to.equal(1);  // #instances
 
-        const staticMethods = captures.filter(c => c.name === 'static_method');
-        expect(staticMethods.length).to.equal(1);  // #createInstance
+            const staticMethods = captures.filter(c => c.name === 'static_method');
+            expect(staticMethods.length).to.equal(1);  // #createInstance
 
-        const getters = captures.filter(c => c.name === 'getter_method');
-        expect(getters.length).to.equal(1);  // #secretValue getter
+            const getters = captures.filter(c => c.name === 'getter_method');
+            expect(getters.length).to.equal(1);  // #secretValue getter
 
-        const setters = captures.filter(c => c.name === 'setter_method');
-        expect(setters.length).to.equal(1);  // #secretValue setter
+            const setters = captures.filter(c => c.name === 'setter_method');
+            expect(setters.length).to.equal(1);  // #secretValue setter
+        });
     });
-});
+}
