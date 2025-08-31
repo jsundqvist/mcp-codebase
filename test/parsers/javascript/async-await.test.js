@@ -13,15 +13,14 @@ async function fetchData() {
 
             // Check async function
             const asyncFuncs = captures.filter(c => c.name === 'async_function');
-            expect(asyncFuncs.length).to.equal(1);
+            expect(asyncFuncs.map(c => c.node.type)).to.deep.equal(['function_declaration']);
 
             const asyncNames = captures.filter(c => c.name === 'async_name');
-            expect(asyncNames.length).to.equal(1);
-            expect(asyncNames[0].node.text).to.equal('fetchData');
+            expect(asyncNames.map(c => c.node.text)).to.deep.equal(['fetchData']);
 
             // Check await expression
             const awaits = captures.filter(c => c.name === 'await_expr');
-            expect(awaits.length).to.equal(1);
+            expect(awaits.map(c => c.node.type)).to.deep.equal(['await_expression']);
         });
     });
 }

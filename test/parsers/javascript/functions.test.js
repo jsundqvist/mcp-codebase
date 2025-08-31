@@ -14,7 +14,7 @@ const withBlock = (value) => {
 
             // Check arrow function captures
             const arrowCaptures = captures.filter(c => c.name === 'arrow_function');
-            expect(arrowCaptures.length).to.equal(3);
+            expect(arrowCaptures.map(c => c.node.text)).to.deep.equal(['() => {}', '(x) => x * 2', '(value) => {\n    return value * 2;\n}']);
 
             // Check parameter captures
             const paramCaptures = captures.filter(c => c.name === 'param_name');

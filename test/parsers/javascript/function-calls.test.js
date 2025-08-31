@@ -12,7 +12,7 @@ doSomething(arg1, arg2);`;
 
             // Check function call captures
             const callCaptures = captures.filter(c => c.name === 'function_call');
-            expect(callCaptures.length).to.equal(2);
+            expect(callCaptures.map(c => c.node.text)).to.deep.equal(['calculate()', 'doSomething(arg1, arg2)']);
 
             // Check function names
             const nameCaptures = captures.filter(c => c.name === 'function_name');
@@ -28,7 +28,7 @@ object.method(arg);`;
 
             // Check method call captures
             const callCaptures = captures.filter(c => c.name === 'method_call');
-            expect(callCaptures.length).to.equal(2);
+            expect(callCaptures.map(c => c.node.text)).to.deep.equal(['console.log("test")', 'object.method(arg)']);
 
             // Check object and property names
             const objectCaptures = captures.filter(c => c.name === 'object');

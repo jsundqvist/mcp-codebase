@@ -45,9 +45,7 @@ class Example {
 
             // Check public fields
             const fields = captures.filter(c => c.name === 'field_name');
-            expect(fields.length).to.equal(2);  // name and count
-            expect(fields.map(c => c.node.text)).to.include('name');
-            expect(fields.map(c => c.node.text)).to.include('count');
+            expect(fields.map(c => c.node.text)).to.deep.equal(['name', 'count']);
 
             // Check private identifiers
             const privateNames = captures.filter(c => c.name === 'private_name');
@@ -62,16 +60,16 @@ class Example {
 
             // Check typed captures
             const staticFields = captures.filter(c => c.name === 'static_field');
-            expect(staticFields.length).to.equal(1);  // #instances
+            expect(staticFields.map(c => c.node.text)).to.deep.equal(['static #instances = 0']);
 
             const staticMethods = captures.filter(c => c.name === 'static_method');
-            expect(staticMethods.length).to.equal(1);  // #createInstance
+            expect(staticMethods.map(c => c.node.text)).to.deep.equal(['static #createInstance() {\n        this.#instances++;\n        return new Example();\n    }']);
 
             const getters = captures.filter(c => c.name === 'getter_method');
-            expect(getters.length).to.equal(1);  // #secretValue getter
+            expect(getters.map(c => c.node.text)).to.deep.equal(['get #secretValue() {\n        return this.#private * 2;\n    }']);
 
             const setters = captures.filter(c => c.name === 'setter_method');
-            expect(setters.length).to.equal(1);  // #secretValue setter
+            expect(setters.map(c => c.node.text)).to.deep.equal(['set #secretValue(value) {\n        this.#private = value / 2;\n    }']);
         });
     });
 }
