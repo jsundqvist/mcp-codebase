@@ -1,6 +1,7 @@
 import { parseAndQuery } from './test-utils.js';
 
-describe('JavaScript Variables', () => {
+describe('JavaScript', () => {
+  describe('Variables', () => {
     // const jsParser = createTestParser();
 
     it('captures variable declarations', () => {
@@ -8,16 +9,17 @@ describe('JavaScript Variables', () => {
 let count = 0;
 var legacy = true;`;
         const captures = parseAndQuery(code);
-        expect(captures).toBeTruthy();
-        expect(captures.length).toBeGreaterThan(0);
+        expect(captures).to.be.ok;
+        expect(captures.length).to.be.greaterThan(0);
         
         // Should find all three variable declarations
         const varCaptures = captures.filter(c => c.name === 'variable');
-        expect(varCaptures.length).toBe(3);
+        expect(varCaptures.length).to.equal(3);
         
         // Check the variable names
         const nameCaptures = captures.filter(c => c.name === 'var_name');
-        expect(nameCaptures.length).toBe(3);
-        expect(nameCaptures.map(c => c.node.text)).toEqual(['answer', 'count', 'legacy']);
+        expect(nameCaptures.length).to.equal(3);
+        expect(nameCaptures.map(c => c.node.text)).to.deep.equal(['answer', 'count', 'legacy']);
     });
+  });
 });

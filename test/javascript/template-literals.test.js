@@ -1,6 +1,7 @@
 import { parseAndQuery } from './test-utils.js';
 
-describe('JavaScript Template Literals', () => {
+describe('JavaScript', () => {
+  describe('Template Literals', () => {
     // const jsParser = createTestParser();
 
     it('captures template strings and expressions', () => {
@@ -13,19 +14,20 @@ const multiline = \`
     line 2
 \`;`;
         const captures = parseAndQuery(code);
-        expect(captures).toBeTruthy();
+        expect(captures).to.be.ok;
         
         // Check template strings
         const templates = captures.filter(c => c.name === 'template');
-        expect(templates.length).toBe(2);
+        expect(templates.length).to.equal(2);
         
         // Check template expressions
         const expressions = captures.filter(c => c.name === 'template_expr');
-        expect(expressions.length).toBe(2);
+        expect(expressions.length).to.equal(2);
         
         // Check template variables
         const vars = captures.filter(c => c.name === 'template_var');
-        expect(vars.length).toBe(2);
-        expect(vars.map(c => c.node.text)).toEqual(['name', 'value']);
+        expect(vars.length).to.equal(2);
+        expect(vars.map(c => c.node.text)).to.deep.equal(['name', 'value']);
     });
+  });
 });

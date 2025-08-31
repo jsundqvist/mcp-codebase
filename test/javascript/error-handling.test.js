@@ -1,6 +1,7 @@
 import { parseAndQuery } from './test-utils.js';
 
-describe('JavaScript Error Handling', () => {
+describe('JavaScript', () => {
+  describe('Error Handling', () => {
     // const jsParser = createTestParser();
 
     it('captures try-catch blocks', () => {
@@ -10,23 +11,24 @@ describe('JavaScript Error Handling', () => {
     console.error(error);
 }`;
         const captures = parseAndQuery(code);
-        expect(captures).toBeTruthy();
+        expect(captures).to.be.ok;
         
         // Check error handling structure
         const errorCapture = captures.find(c => c.name === 'error_handling');
-        expect(errorCapture).toBeTruthy();
-        expect(errorCapture.node.type).toBe('try_statement');
+        expect(errorCapture).to.be.ok;
+        expect(errorCapture.node.type).to.equal('try_statement');
         
         // Check try block capture
         const tryCapture = captures.find(c => c.name === 'try_body');
-        expect(tryCapture).toBeTruthy();
+        expect(tryCapture).to.be.ok;
         
         // Check catch parameter and body
         const errorParamCapture = captures.find(c => c.name === 'error_param');
-        expect(errorParamCapture).toBeTruthy();
-        expect(errorParamCapture.node.text).toBe('error');
+        expect(errorParamCapture).to.be.ok;
+        expect(errorParamCapture.node.text).to.equal('error');
         
         const catchBodyCapture = captures.find(c => c.name === 'catch_body');
-        expect(catchBodyCapture).toBeTruthy();
+        expect(catchBodyCapture).to.be.ok;
     });
+  });
 });

@@ -1,6 +1,7 @@
 import { parseAndQuery } from './test-utils.js';
 
-describe('JavaScript Classes', () => {
+describe('JavaScript', () => {
+  describe('Classes', () => {
 
     it('captures class declarations', () => {
         const code = `class User {
@@ -9,17 +10,17 @@ describe('JavaScript Classes', () => {
     }
 }`;
         const captures = parseAndQuery(code);
-        expect(captures).toBeTruthy();
-        expect(captures.length).toBeGreaterThan(0);
+        expect(captures).to.be.ok;
+        expect(captures.length).to.be.greaterThan(0);
         
         // Check that we have both the class and name captures
         const classCapture = captures.find(c => c.name === 'class');
-        expect(classCapture).toBeTruthy();
-        expect(classCapture.node.type).toBe('class_declaration');
+        expect(classCapture).to.be.ok;
+        expect(classCapture.node.type).to.equal('class_declaration');
         
         const nameCapture = captures.find(c => c.name === 'class_name');
-        expect(nameCapture).toBeTruthy();
-        expect(nameCapture.node.text).toBe('User');
+        expect(nameCapture).to.be.ok;
+        expect(nameCapture.node.text).to.equal('User');
     });
 
     it('captures class method', () => {
@@ -29,17 +30,18 @@ add(a, b) {
 }
 }`;
         const captures = parseAndQuery(code);
-        expect(captures).toBeTruthy();
-        expect(captures.length).toBeGreaterThan(0);
+        expect(captures).to.be.ok;
+        expect(captures.length).to.be.greaterThan(0);
         
         // Check for method capture
         const methodCapture = captures.find(c => c.name === 'method');
-        expect(methodCapture).toBeTruthy();
-        expect(methodCapture.node.type).toBe('method_definition');
+        expect(methodCapture).to.be.ok;
+        expect(methodCapture.node.type).to.equal('method_definition');
         
         // Check for method name capture
         const nameCapture = captures.find(c => c.name === 'method_name');
-        expect(nameCapture).toBeTruthy();
-        expect(nameCapture.node.text).toBe('add');
+        expect(nameCapture).to.be.ok;
+        expect(nameCapture.node.text).to.equal('add');
     });
+  });
 });
