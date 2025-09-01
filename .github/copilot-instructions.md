@@ -168,3 +168,39 @@ When developing or modifying Tree-sitter parsers in this project, follow these p
 - Field labels are required for named nodes
 - Captures can be on any level of nesting
 - Each pattern stands alone (no cross-pattern references)
+
+## Tool Usage Guidelines
+
+When using terminal and output retrieval tools, follow these patterns:
+
+### Reliable Terminal Output Reading
+For consistent terminal output capture, follow this workflow:
+
+1. **Run initial command in background** to get a UUID:
+   ```javascript
+   run_in_terminal("your_command", isBackground=true)
+   // Returns: ID=uuid-here
+   ```
+
+2. **Clear the terminal** for clean subsequent output:
+   ```javascript
+   run_in_terminal("clear", isBackground=false)
+   ```
+
+3. **Run additional commands in foreground** (they use the active terminal):
+   ```javascript
+   run_in_terminal("next_command", isBackground=false)
+   ```
+
+4. **Retrieve accumulated output** using the UUID:
+   ```javascript
+   get_terminal_output("uuid-here")
+   // Returns: Complete output from all commands in the session
+   ```
+
+### Key Points
+- **Background execution** creates persistent terminal with retrievable UUID
+- **Foreground execution** uses currently active terminal (no new UUID)
+- **Commands accumulate** in the same terminal session
+- **UUID enables reliable output access** throughout the session
+- **Context IDs are invalid** - only use tool-returned UUIDs
