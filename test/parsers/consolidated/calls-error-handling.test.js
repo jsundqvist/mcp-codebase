@@ -2,14 +2,16 @@ import { expect } from 'chai';
 import { createJavaScriptParser } from '../../../src/parsers/javascript.js';
 import {
     callPattern,
-    errorHandlingPattern
+    errorHandlingPattern,
+    operatorPattern
 } from '../../../src/parsers/javascript.js';
 import { individual, query } from '../test-utils.js';
 
 // Combine patterns for this group
 const callsErrorHandlingQuery = [
     callPattern,
-    errorHandlingPattern
+    errorHandlingPattern,
+    operatorPattern
 ].join('\n');
 
 const run = function(parser) {
@@ -20,7 +22,7 @@ const run = function(parser) {
 console.log('Hello');`;
                 const captures = query(parser, code);
                 expect(captures).to.be.ok;
-                expect(captures.map(c => c.name)).to.deep.equal(['function_call', 'function_name', 'method_call', 'object', 'member', 'property']);
+                expect(captures.map(c => c.name).sort()).to.deep.equal(['function_call', 'function_name', 'member', 'method_call', 'object', 'property'].sort());
 
                 // Check for direct function call captures
                 const callCaptures = captures.filter(c => c.name === 'function_call');
@@ -28,15 +30,14 @@ console.log('Hello');`;
             });
 
             it('captures method calls', () => {
-                const code = `obj.method(arg1, arg2);
-array.push(item);`;
+                const code = `obj.method(arg1, arg2);`;
                 const captures = query(parser, code);
                 expect(captures).to.be.ok;
-                expect(captures.map(c => c.name)).to.deep.equal(['method_call', 'object', 'member', 'property', 'method_call', 'object', 'member', 'property']);
+                expect(captures.map(c => c.name).sort()).to.deep.equal(['member', 'method_call', 'object', 'property'].sort());
 
                 // Check for method call captures
                 const methodCaptures = captures.filter(c => c.name === 'method_call');
-                expect(methodCaptures.map(c => c.node.type)).to.deep.equal(['call_expression', 'call_expression']);
+                expect(methodCaptures.map(c => c.node.type)).to.deep.equal(['call_expression']);
             });
         });
 

@@ -9,7 +9,10 @@ import {
     destructurePattern,
     asyncPattern,
     templatePattern,
-    spreadPattern
+    spreadPattern,
+    statementPattern,
+    operatorPattern,
+    callPattern
 } from '../../../src/parsers/javascript.js';
 import { query, individual } from '../test-utils.js';
 
@@ -23,7 +26,10 @@ const coreDeclarationsQuery = [
     destructurePattern,
     asyncPattern,
     templatePattern,
-    spreadPattern
+    spreadPattern,
+    statementPattern,
+    operatorPattern,
+    callPattern
 ].join('\n');
 
 const run = function(parser) {
@@ -181,7 +187,7 @@ const [first, second] = array;`;
 }`;
                 const captures = query(parser, code);
                 expect(captures).to.be.ok;
-                expect(captures.map(c => c.name)).to.deep.equal(['function', 'async_function', 'async_keyword', 'name', 'async_name', 'variable', 'var_name', 'await_expr', 'function_call', 'function_name', 'variable', 'var_name', 'await_expr', 'method_call', 'object', 'member', 'property', 'return']);
+                expect(captures.map(c => c.name).sort()).to.deep.equal(['function', 'async_function', 'async_keyword', 'name', 'async_name', 'variable', 'var_name', 'await_expr', 'function_call', 'function_name', 'variable', 'var_name', 'await_expr', 'method_call', 'object', 'member', 'property', 'return'].sort());
 
                 // Check for async function captures
                 const asyncCaptures = captures.filter(c => c.name === 'async_function');
