@@ -119,9 +119,7 @@ export const asyncPattern = `
 
 export const templatePattern = `
     ; Template literals
-    (template_string) @template
-    (template_substitution
-        (identifier) @template_var) @template_expr
+    (template_string) @template_literal
 `;
 
 export const spreadPattern = `
@@ -162,9 +160,15 @@ export const classFieldPattern = `
 `;
 
 export const operatorPattern = `
-    ; Basic member access and binary expressions
-    (member_expression) @member
-    (binary_expression) @binary
+    ; Binary operators
+    (binary_expression) @binary_operator
+
+    ; Logical operators (&&, ||, ??)
+    (binary_expression
+        operator: ["&&" "||" "??"] @logical_operator) @logical_operator
+
+    ; Unary operators (!, ~, +, -)
+    (unary_expression) @unary_operator
 `;
 
 export const logicalAssignmentPattern = `
