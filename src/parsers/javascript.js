@@ -1,3 +1,7 @@
+export const memberPattern = `
+    ; Member access expressions
+    (member_expression) @member
+`;
 import Parser from 'tree-sitter';
 import JavaScript from 'tree-sitter-javascript';
 
@@ -232,6 +236,7 @@ export const jsQuery = [
     operatorPattern,
     logicalAssignmentPattern,
     optionalPattern,
+    memberPattern,
     loopPattern,
     conditionalPattern,
     statementPattern,

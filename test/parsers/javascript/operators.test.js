@@ -19,11 +19,11 @@ const product = x * y;`;
 
             // Check member expressions
             const memberAccess = captures.filter(c => c.name === 'member');
-            expect(memberAccess.length).to.equal(1);  // obj.x
+            expect(memberAccess.map(c => c.node.text)).to.deep.equal(["obj.x"]);
 
             // Check binary expressions
-            const binaryOps = captures.filter(c => c.name === 'binary');
-            expect(binaryOps.length).to.equal(2);  // + and * operations
+            const binaryOps = captures.filter(c => c.name === 'binary_operator');
+            expect(binaryOps.map(c => c.node.text)).to.deep.equal(['a + b', 'x * y']);
         });
     });
 };
