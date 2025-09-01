@@ -70,7 +70,7 @@ const run = function(parser) {
 
                 // Check computed field captures
                 const computedFields = captures.filter(c => c.name === 'field');
-                expect(computedFields.map(c => c.node.type)).to.deep.equal([]);  // Pattern doesn't capture computed properties
+                expect(computedFields).to.be.empty;  // Pattern doesn't capture computed properties
             });
 
             it('captures mixed field types', () => {
