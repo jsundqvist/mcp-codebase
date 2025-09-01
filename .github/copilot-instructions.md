@@ -184,7 +184,7 @@ For consistent terminal output capture, follow this workflow:
 
 2. **Run additional commands in foreground** (they use the active terminal):
    ```javascript
-   run_in_terminal("clear && next_command", isBackground=false)
+   run_in_terminal("clear && npx mocha <test-file>", isBackground=false)
    ```
 
 3. **Retrieve accumulated output** using the UUID:
