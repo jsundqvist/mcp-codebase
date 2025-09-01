@@ -182,17 +182,12 @@ For consistent terminal output capture, follow this workflow:
    // Returns: ID=uuid-here
    ```
 
-2. **Clear the terminal** for clean subsequent output:
+2. **Run additional commands in foreground** (they use the active terminal):
    ```javascript
-   run_in_terminal("clear", isBackground=false)
+   run_in_terminal("clear && next_command", isBackground=false)
    ```
 
-3. **Run additional commands in foreground** (they use the active terminal):
-   ```javascript
-   run_in_terminal("next_command", isBackground=false)
-   ```
-
-4. **Retrieve accumulated output** using the UUID:
+3. **Retrieve accumulated output** using the UUID:
    ```javascript
    get_terminal_output("uuid-here")
    // Returns: Complete output from all commands in the session
